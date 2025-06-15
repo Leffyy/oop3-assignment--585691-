@@ -89,4 +89,3 @@ public class ImageDownloadService {
         return lastDot > 0 ? imagePath.substring(lastDot) : ".jpg";
     }
 }
-```
