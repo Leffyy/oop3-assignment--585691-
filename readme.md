@@ -43,6 +43,14 @@ Configure API Keys
 set OMDB_API_KEY=your_omdb_key_here
 set TMDB_API_KEY=your_tmdb_key_here
 
+<!-- Database access: -->
+
+http://localhost:8080/h2-console
+JDBC URL: jdbc:h2:mem:testdb
+Username: sa
+Password: (leave blank) 
+
+
 <!-- Running the Application -->
 
 # Clone the repository
@@ -51,13 +59,6 @@ cd movie-watchlist
 
 # Run with Maven
 mvn clean spring-boot:run
+The application will start on http://localhost:8080
 
-# The application will start on http://localhost:8080
 
-
-<!-- Database access: -->
-
-http://localhost:8080/h2-console
-JDBC URL: jdbc:h2:mem:testdb
-Username: sa
-Password: (leave blank) 
