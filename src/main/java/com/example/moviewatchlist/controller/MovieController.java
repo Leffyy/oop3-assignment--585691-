@@ -21,7 +21,7 @@ public class MovieController {
     private MovieService movieService;
     
     @PostMapping
-    public CompletableFuture<ResponseEntity<?>> addMovie(@RequestBody Map<String, String> request) {
+    public CompletableFuture<ResponseEntity<Object>> addMovie(@RequestBody Map<String, String> request) {
         String title = request.get("title");
         if (title == null || title.trim().isEmpty()) {
             return CompletableFuture.completedFuture(
@@ -30,15 +30,10 @@ public class MovieController {
         }
         
         return movieService.addMovieToWatchlist(title.trim())
-                .thenApply(movie -> (ResponseEntity<?>) ResponseEntity.status(HttpStatus.CREATED).body(new MovieResponse(movie)))
+                .thenApply(movie -> ResponseEntity.status(HttpStatus.CREATED).body((Object) new MovieResponse(movie)))
                 .exceptionally(ex -> {
-                    // Get the root cause of the exception
-                    Throwable cause = ex;
-                    while (cause.getCause() != null) {
-                        cause = cause.getCause();
-                    }
-                    String errorMessage = cause.getMessage();
-                    return ResponseEntity.badRequest().body(Map.of("error", errorMessage));
+                    String errorMessage = ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
+                    return ResponseEntity.badRequest().body((Object) Map.of("error", errorMessage));
                 });
     }
     
@@ -55,7 +50,7 @@ public class MovieController {
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<?> getMovie(@PathVariable Long id) {
+    public ResponseEntity<Object> getMovie(@PathVariable Long id) {
         Optional<MovieResponse> movie = movieService.getMovieById(id);
         if (movie.isPresent()) {
             return ResponseEntity.ok(movie.get());
@@ -64,7 +59,7 @@ public class MovieController {
     }
     
     @PatchMapping("/{id}/watched")
-    public ResponseEntity<?> updateWatchedStatus(
+    public ResponseEntity<Object> updateWatchedStatus(
             @PathVariable Long id, 
             @RequestBody Map<String, Boolean> request) {
         
@@ -81,7 +76,7 @@ public class MovieController {
     }
     
     @PatchMapping("/{id}/rating")
-    public ResponseEntity<?> updateRating(
+    public ResponseEntity<Object> updateRating(
             @PathVariable Long id, 
             @RequestBody Map<String, Integer> request) {
         
@@ -99,7 +94,7 @@ public class MovieController {
     }
     
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteMovie(@PathVariable Long id) {
+    public ResponseEntity<Object> deleteMovie(@PathVariable Long id) {
         boolean deleted = movieService.deleteMovie(id);
         if (deleted) {
             return ResponseEntity.ok(Map.of("message", "Movie deleted successfully"));

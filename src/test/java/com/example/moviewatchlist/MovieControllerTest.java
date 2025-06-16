@@ -8,6 +8,7 @@ import com.example.moviewatchlist.controller.MovieController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -22,6 +23,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(MovieController.class)
+// disables security features for testing purposes
+@AutoConfigureMockMvc(addFilters = false) 
 public class MovieControllerTest {
     
     @Autowired
@@ -59,16 +62,22 @@ public class MovieControllerTest {
     
     @Test
     public void testAddMovieSuccess() throws Exception {
+        // test data set up
         Map<String, String> request = Map.of("title", "Inception");
         Movie mockMovie = new Movie("Inception", "2010", "Christopher Nolan", "Sci-Fi");
         mockMovie.setId(1L);
-        
+
+
+        // Mock the service to return the mock movie
         when(movieService.addMovieToWatchlist(anyString()))
             .thenReturn(CompletableFuture.completedFuture(mockMovie));
-        
+
+        // Perform the request and verify the response
         mockMvc.perform(post("/api/movies")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title").value("Inception"));
     }
 }
+

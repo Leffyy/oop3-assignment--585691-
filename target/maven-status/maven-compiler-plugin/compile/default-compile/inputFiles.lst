@@ -1,0 +1,16 @@
+C:\Users\delis\Documents\oop3-assignment--585691-\src\main\java\com\example\moviewatchlist\dto\MovieResponse.java
+C:\Users\delis\Documents\oop3-assignment--585691-\src\main\java\com\example\moviewatchlist\MovieWatchlistApplication.java
+C:\Users\delis\Documents\oop3-assignment--585691-\src\main\java\com\example\moviewatchlist\model\Movie.java
+C:\Users\delis\Documents\oop3-assignment--585691-\src\main\java\com\example\moviewatchlist\repository\MovieRepository.java
+C:\Users\delis\Documents\oop3-assignment--585691-\src\main\java\com\example\moviewatchlist\service\ImageDownloadService.java
+C:\Users\delis\Documents\oop3-assignment--585691-\src\main\java\com\example\moviewatchlist\config\AsyncConfig.java
+C:\Users\delis\Documents\oop3-assignment--585691-\src\main\java\com\example\moviewatchlist\dto\TMDbImagesResponse.java
+C:\Users\delis\Documents\oop3-assignment--585691-\src\main\java\com\example\moviewatchlist\controller\MovieController.java
+C:\Users\delis\Documents\oop3-assignment--585691-\src\main\java\com\example\moviewatchlist\service\TMDbService.java
+C:\Users\delis\Documents\oop3-assignment--585691-\src\main\java\com\example\moviewatchlist\controller\GlobalExceptionHandler.java
+C:\Users\delis\Documents\oop3-assignment--585691-\src\main\java\com\example\moviewatchlist\service\MovieService.java
+C:\Users\delis\Documents\oop3-assignment--585691-\src\main\java\com\example\moviewatchlist\dto\TMDbSimilarResponse.java
+C:\Users\delis\Documents\oop3-assignment--585691-\src\main\java\com\example\moviewatchlist\dto\OMDbResponse.java
+C:\Users\delis\Documents\oop3-assignment--585691-\src\main\java\com\example\moviewatchlist\service\OMDbService.java
+C:\Users\delis\Documents\oop3-assignment--585691-\src\main\java\com\example\moviewatchlist\dto\TMDbSearchResponse.java
+C:\Users\delis\Documents\oop3-assignment--585691-\src\main\java\com\example\moviewatchlist\dto\PaginatedResponse.java

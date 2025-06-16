@@ -13,7 +13,7 @@ public class OMDbResponse {
     private String director;
     
     @JsonProperty("Genre")
-    private String genre;
+    private String genre;   
     
     @JsonProperty("Plot")
     private String plot;

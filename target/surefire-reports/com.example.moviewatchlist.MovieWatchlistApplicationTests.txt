@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.example.moviewatchlist.MovieWatchlistApplicationTests
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.600 s -- in com.example.moviewatchlist.MovieWatchlistApplicationTests
