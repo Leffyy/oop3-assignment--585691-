@@ -20,27 +20,27 @@ public class MovieController {
     @Autowired
     private MovieService movieService;
     
-
     @PostMapping
-public CompletableFuture<ResponseEntity<?>> addMovie(@RequestBody Map<String, String> request) {
-    String title = request.get("title");
-    if (title == null || title.trim().isEmpty()) {
-        return CompletableFuture.completedFuture(
-            ResponseEntity.badRequest().body(Map.of("error", "Movie title is required"))
-        );
+    public CompletableFuture<ResponseEntity<?>> addMovie(@RequestBody Map<String, String> request) {
+        String title = request.get("title");
+        if (title == null || title.trim().isEmpty()) {
+            return CompletableFuture.completedFuture(
+                ResponseEntity.badRequest().body(Map.of("error", "Movie title is required"))
+            );
+        }
+        
+        return movieService.addMovieToWatchlist(title.trim())
+                .thenApply(movie -> (ResponseEntity<?>) ResponseEntity.status(HttpStatus.CREATED).body(new MovieResponse(movie)))
+                .exceptionally(ex -> {
+                    // Get the root cause of the exception
+                    Throwable cause = ex;
+                    while (cause.getCause() != null) {
+                        cause = cause.getCause();
+                    }
+                    String errorMessage = cause.getMessage();
+                    return ResponseEntity.badRequest().body(Map.of("error", errorMessage));
+                });
     }
-    
-    return movieService.addMovieToWatchlist(title.trim())
-            .thenApply(movie -> ResponseEntity.status(HttpStatus.CREATED).body(new MovieResponse(movie)))
-            .exceptionally(ex -> {
- 
-                Throwable cause = ex.getCause();
-                String errorMessage = cause != null ? cause.getMessage() : ex.getMessage();
-                return ResponseEntity.badRequest().body(Map.of("error", errorMessage));
-            });
-}
-
-
     
     @GetMapping
     public ResponseEntity<PaginatedResponse<MovieResponse>> getMovies(
