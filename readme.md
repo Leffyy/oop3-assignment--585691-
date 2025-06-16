@@ -1,9 +1,11 @@
-Movie Watchlist Backend Application
+<!-- Movie Watchlist Backend Application -->
+This application allows users to build and manage their movie watchlist 
+
 
 A Spring Boot application that allows users to create and manage a movie watchlist by integrating with OMDb and TMDB APIs.
 
 
-Features-
+<!-- Features: -->
 
 Add movies: Search and add movies to your watchlist using movie titles
 Rich movie data: Combines data from OMDb (basic info) and TMDB (images, similar movies)
@@ -17,41 +19,45 @@ User Request → Controller → Service → External APIs (OMDb/TMDB) → Databa
                     ↓
               Image Download Service → File System
 
+<!-- API Endpoints: -->
 
-Project Structure
-src/
-├── main/
-│   ├── java/com/example/moviewatchlist/
-│   │   ├── MovieWatchlistApplication.java     # Main application class
-│   │   ├── config/
-│   │   │   └── AsyncConfig.java               # Async configuration
-│   │   ├── controller/
-│   │   │   ├── MovieController.java           # REST endpoints
-│   │   │   └── GlobalExceptionHandler.java    # Error handling
-│   │   ├── dto/                               # Data Transfer Objects
-│   │   │   ├── MovieResponse.java
-│   │   │   ├── OMDbResponse.java
-│   │   │   ├── TMDbSearchResponse.java
-│   │   │   ├── TMDbImagesResponse.java
-│   │   │   ├── TMDbSimilarResponse.java
-│   │   │   └── PaginatedResponse.java
-│   │   ├── model/
-│   │   │   └── Movie.java                     # JPA Entity
-│   │   ├── repository/
-│   │   │   └── MovieRepository.java           # Data access layer
-│   │   └── service/
-│   │       ├── MovieService.java              # Main business logic
-│   │       ├── OMDbService.java               # OMDb API integration
-│   │       ├── TMDbService.java               # TMDB API integration
-│   │       └── ImageDownloadService.java      # Image handling
-│   └── resources/
-│       └── application.properties             # Configuration
-└── test/                                      # Unit tests
+POST /api/movies - Create movie
+GET /api/movies - List with pagination
+GET /api/movies/{id} - Get specific movie
+PATCH /api/movies/{id}/rating - Update rating
+PATCH /api/movies/{id}/watched - Update watched status
+DELETE /api/movies/{id} - Delete movie
 
+<!-- Technology Stack -->
 
-requirements:
+- **Framework**: Spring Boot 3.3.0
+- **Language**: Java 17
+- **Database**: H2 (in-memory for development)
+- **Build Tool**: Maven
+- **External APIs**: OMDb API, The Movie Database (TMDb) API
+- **Architecture**: RESTful web services with async processing
+
+<!-- requirements: -->
 
 Configure API Keys
 set OMDB_API_KEY=your_omdb_key_here
 set TMDB_API_KEY=your_tmdb_key_here
 
+<!-- Running the Application -->
+
+# Clone the repository
+git clone <repository-url>
+cd movie-watchlist
+
+# Run with Maven
+mvn clean spring-boot:run
+
+# The application will start on http://localhost:8080
+
+
+<!-- Database access: -->
+
+http://localhost:8080/h2-console
+JDBC URL: jdbc:h2:mem:testdb
+Username: sa
+Password: (leave blank) 
