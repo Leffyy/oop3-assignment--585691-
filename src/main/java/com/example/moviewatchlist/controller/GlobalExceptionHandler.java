@@ -6,8 +6,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import java.util.Map;
 
-// This class handles all exceptions that happen in our controllers
-// Instead of each controller handling its own errors, we centralize it here
+// This class handles all exceptions that happen in the controllers
 @ControllerAdvice
 public class GlobalExceptionHandler {
     
@@ -19,7 +18,7 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", e.getMessage()));
     }
     
-    // Handles cases where someone passes invalid arguments
+   
     // Returns a 400 bad request error with the error message
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException e) {
@@ -27,7 +26,7 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", e.getMessage()));
     }
     
-    // Catches any other exception we didn't specifically handle above
+    // Catches any other exception w
     // Returns a generic 500 error without exposing internal details
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGenericException(Exception e) {
