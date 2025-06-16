@@ -29,44 +29,47 @@ public class MovieService {
     @Autowired
     private ImageDownloadService imageDownloadService;
     
+    // Add a new movie to the watchlist by searching for it online
     public CompletableFuture<Movie> addMovieToWatchlist(String title) {
-        // Check if movie already exists
+        // First, try to find the movie using OMDb API
         return omdbService.getMovieData(title)
                 .thenCompose(omdbResponse -> {
+                    // Check if OMDb found the movie
                     if (!"True".equals(omdbResponse.getResponse())) {
                         throw new RuntimeException("Movie not found: " + omdbResponse.getError());
                     }
                     
-                    // Check if movie already exists in database
-                    if (movieRepository.existsByTitleAndYear(omdbResponse.getTitle(), omdbResponse.getYear())) {
+                    // Make sure we don't add the same movie twice
+                    if (movieRepository.existsByTitleAndReleaseYear(omdbResponse.getTitle(), omdbResponse.getYear())) {
                         throw new RuntimeException("Movie already exists in watchlist");
                     }
                     
-                    // Create movie with OMDb data
+                    // Create a new movie with the basic info from OMDb
                     Movie movie = new Movie();
                     movie.setTitle(omdbResponse.getTitle());
-                    movie.setYear(omdbResponse.getYear());
+                    movie.setReleaseYear(omdbResponse.getYear());
                     movie.setDirector(omdbResponse.getDirector());
                     movie.setGenre(omdbResponse.getGenre());
                     movie.setPlot(omdbResponse.getPlot());
                     movie.setRuntime(omdbResponse.getRuntime());
                     movie.setImdbRating(omdbResponse.getImdbRating());
                     
-                    // Search for movie in TMDb
+                    // Now try to get more details from TMDb
                     return tmdbService.searchMovie(title)
                             .thenCompose(tmdbSearchResponse -> {
+                                // If TMDb doesn't have the movie, just save what we have from OMDb
                                 if (tmdbSearchResponse.getResults().isEmpty()) {
-                                    // Save movie with only OMDb data
                                     return CompletableFuture.completedFuture(movieRepository.save(movie));
                                 }
                                 
+                                // Add the extra info from TMDb
                                 TMDbSearchResponse.TMDbMovie tmdbMovie = tmdbSearchResponse.getResults().get(0);
                                 movie.setTmdbId(tmdbMovie.getId());
                                 movie.setOverview(tmdbMovie.getOverview());
                                 movie.setReleaseDate(tmdbMovie.getReleaseDate());
                                 movie.setVoteAverage(tmdbMovie.getVoteAverage());
                                 
-                                // Parallel calls for images and similar movies
+                                // Get images and similar movies at the same time to save time
                                 CompletableFuture<TMDbImagesResponse> imagesFuture = 
                                     tmdbService.getMovieImages(tmdbMovie.getId());
                                 CompletableFuture<TMDbSimilarResponse> similarFuture = 
@@ -77,7 +80,7 @@ public class MovieService {
                                             TMDbImagesResponse imagesResponse = imagesFuture.join();
                                             TMDbSimilarResponse similarResponse = similarFuture.join();
                                             
-                                            // Process similar movies
+                                            // Save up to 10 similar movies
                                             List<String> similarMovies = new ArrayList<>();
                                             if (similarResponse.getResults() != null) {
                                                 similarMovies = similarResponse.getResults().stream()
@@ -87,7 +90,7 @@ public class MovieService {
                                             }
                                             movie.setSimilarMovies(similarMovies);
                                             
-                                            // Process and download images
+                                            // Collect image paths to download (2 posters + 1 backdrop)
                                             List<String> imagePaths = new ArrayList<>();
                                             if (imagesResponse.getPosters() != null && !imagesResponse.getPosters().isEmpty()) {
                                                 imagePaths.addAll(imagesResponse.getPosters().stream()
@@ -102,6 +105,7 @@ public class MovieService {
                                                         .toList());
                                             }
                                             
+                                            // Download the images if we found any
                                             if (!imagePaths.isEmpty()) {
                                                 return imageDownloadService.downloadImages(imagePaths, movie.getTitle())
                                                         .thenApply(downloadedPaths -> {
@@ -109,6 +113,7 @@ public class MovieService {
                                                             return movieRepository.save(movie);
                                                         });
                                             } else {
+                                                // No images found, just save the movie
                                                 return CompletableFuture.completedFuture(movieRepository.save(movie));
                                             }
                                         });
@@ -116,10 +121,12 @@ public class MovieService {
                 });
     }
     
+    // Get a page of movies from the watchlist
     public PaginatedResponse<MovieResponse> getMovies(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Movie> moviePage = movieRepository.findAll(pageable);
         
+        // Convert movies to response format
         List<MovieResponse> movieResponses = moviePage.getContent().stream()
                 .map(MovieResponse::new)
                 .toList();
@@ -133,6 +140,7 @@ public class MovieService {
         );
     }
     
+    // Mark a movie as watched or unwatched
     public Optional<Movie> updateWatchedStatus(Long movieId, boolean watched) {
         Optional<Movie> movieOpt = movieRepository.findById(movieId);
         if (movieOpt.isPresent()) {
@@ -143,7 +151,9 @@ public class MovieService {
         return Optional.empty();
     }
     
+    // Give a movie a rating from 1 to 5 stars
     public Optional<Movie> updateRating(Long movieId, Integer rating) {
+        // Make sure the rating is valid
         if (rating != null && (rating < 1 || rating > 5)) {
             throw new IllegalArgumentException("Rating must be between 1 and 5");
         }
@@ -157,6 +167,7 @@ public class MovieService {
         return Optional.empty();
     }
     
+    // Remove a movie from the watchlist
     public boolean deleteMovie(Long movieId) {
         if (movieRepository.existsById(movieId)) {
             movieRepository.deleteById(movieId);
@@ -165,6 +176,7 @@ public class MovieService {
         return false;
     }
     
+    // Get details for a specific movie
     public Optional<MovieResponse> getMovieById(Long movieId) {
         return movieRepository.findById(movieId)
                 .map(MovieResponse::new);

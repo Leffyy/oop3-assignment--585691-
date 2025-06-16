@@ -1,36 +1,49 @@
 package com.example.moviewatchlist.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+// This class represents the response we get from the OMDb API
+// It maps JSON fields to Java properties for easy access
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OMDbResponse {
+    // Movie title from the API
     @JsonProperty("Title")
     private String title;
     
+    // Release year of the movie
     @JsonProperty("Year")
     private String year;
     
+    // Director's name
     @JsonProperty("Director")
     private String director;
     
+    // Movie genres (like "Action, Drama")
     @JsonProperty("Genre")
     private String genre;   
     
+    // Short description of the movie plot
     @JsonProperty("Plot")
     private String plot;
     
+    // How long the movie is (like "120 min")
     @JsonProperty("Runtime")
     private String runtime;
     
+    // IMDb rating score
     @JsonProperty("imdbRating")
     private String imdbRating;
     
+    // API response status ("True" or "False")
     @JsonProperty("Response")
     private String response;
     
+    // Error message if something went wrong
     @JsonProperty("Error")
     private String error;
     
-    // Getters and Setters
+    // Standard getters and setters for all properties
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     

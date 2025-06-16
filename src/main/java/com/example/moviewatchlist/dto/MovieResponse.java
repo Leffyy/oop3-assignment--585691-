@@ -3,7 +3,9 @@ package com.example.moviewatchlist.dto;
 import com.example.moviewatchlist.model.Movie;
 import java.util.List;
 
+// This class represents a movie response that gets sent back to the client
 public class MovieResponse {
+    // Basic movie information
     private Long id;
     private String title;
     private String year;
@@ -15,15 +17,20 @@ public class MovieResponse {
     private String overview;
     private String releaseDate;
     private Double voteAverage;
+    
+    // Lists for images and related movies
     private List<String> imagePaths;
     private List<String> similarMovies;
+    
+    // User-specific data
     private boolean watched;
     private Integer rating;
     
+    // Constructor that takes a Movie object and copies all its data
     public MovieResponse(Movie movie) {
         this.id = movie.getId();
         this.title = movie.getTitle();
-        this.year = movie.getYear();
+        this.year = movie.getReleaseYear();
         this.director = movie.getDirector();
         this.genre = movie.getGenre();
         this.plot = movie.getPlot();
@@ -38,10 +45,10 @@ public class MovieResponse {
         this.rating = movie.getRating();
     }
     
-    // Getters
+    // All the getter methods to access the movie data
     public Long getId() { return id; }
     public String getTitle() { return title; }
-    public String getYear() { return year; }
+    public String getReleaseYear() { return year; }
     public String getDirector() { return director; }
     public String getGenre() { return genre; }
     public String getPlot() { return plot; }

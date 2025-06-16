@@ -2,64 +2,73 @@ package com.example.moviewatchlist.model;
 
 import jakarta.persistence.*;
 import java.util.List;
+import java.util.Objects;
 
+// This class represents a movie in our database
 @Entity
 @Table(name = "movies")
 public class Movie {
+    // Unique ID for each movie, automatically generated
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    // Basic movie information that we always need
     @Column(nullable = false)
     private String title;
-    
-    private String year;
+    @Column(name = "movie_year")
+    private String releaseYear;
     private String director;
     private String genre;
     private String plot;
     private String runtime;
     private String imdbRating;
     
-    // TMDB specific fields
+    // Extra info we get from TMDB API
     private Integer tmdbId;
     private String overview;
     private String releaseDate;
     private Double voteAverage;
     
+    // Store multiple image URLs for each movie
     @ElementCollection
     @CollectionTable(name = "movie_images", joinColumns = @JoinColumn(name = "movie_id"))
     @Column(name = "image_path")
     private List<String> imagePaths;
     
+    // Store titles of similar movies
     @ElementCollection
     @CollectionTable(name = "similar_movies", joinColumns = @JoinColumn(name = "movie_id"))
     @Column(name = "similar_movie_title")
     private List<String> similarMovies;
     
+    // User's personal tracking info
     private boolean watched = false;
     
+    // User can rate movies from 1 to 5 stars
     @Column(nullable = true)
-    private Integer rating; // 1-5 scale
+    private Integer rating;
     
-    // Constructors
+    // Empty constructor needed by JPA
     public Movie() {}
     
-    public Movie(String title, String year, String director, String genre) {
+    // Constructor for creating a new movie with basic info
+    public Movie(String title, String releaseYear, String director, String genre) {
         this.title = title;
-        this.year = year;
+        this.releaseYear = releaseYear;
         this.director = director;
         this.genre = genre;
     }
     
-    // Getters and Setters
+    // Simple getters and setters for accessing movie data
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     
-    public String getYear() { return year; }
-    public void setYear(String year) { this.year = year; }
+    public String getReleaseYear() { return releaseYear; }
+    public void setReleaseYear(String releaseYear) { this.releaseYear = releaseYear; }
     
     public String getDirector() { return director; }
     public void setDirector(String director) { this.director = director; }
@@ -99,4 +108,22 @@ public class Movie {
     
     public Integer getRating() { return rating; }
     public void setRating(Integer rating) { this.rating = rating; }
+    
+    public String getYear() { return releaseYear; }
+    public void setYear(String year) { this.releaseYear = year; }
+    
+    // Check if two movies are the same based on id and title
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Movie movie = (Movie) o;
+        return Objects.equals(id, movie.id) && Objects.equals(title, movie.title);
+    }
+    
+    // Generate hash code for this movie
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, title);
+    }
 }
