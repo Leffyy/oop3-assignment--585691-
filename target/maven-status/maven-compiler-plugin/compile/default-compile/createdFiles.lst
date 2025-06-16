@@ -16,4 +16,5 @@ com\example\moviewatchlist\model\Movie.class
 com\example\moviewatchlist\MovieWatchlistApplication.class
 com\example\moviewatchlist\dto\MovieResponse.class
 com\example\moviewatchlist\service\TMDbService.class
+com\example\moviewatchlist\config\WebConfig.class
 com\example\moviewatchlist\dto\TMDbImagesResponse$ImageData.class

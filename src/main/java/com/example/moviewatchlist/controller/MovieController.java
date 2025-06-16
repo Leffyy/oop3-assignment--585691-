@@ -4,13 +4,18 @@ import com.example.moviewatchlist.dto.MovieResponse;
 import com.example.moviewatchlist.dto.PaginatedResponse;
 import com.example.moviewatchlist.model.Movie;
 import com.example.moviewatchlist.service.MovieService;
+import com.example.moviewatchlist.service.TMDbService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 // This controller handles all movie-related web requests
 @RestController
@@ -22,9 +27,50 @@ public class MovieController {
     @Autowired
     private MovieService movieService;
     
+    // Inject TMDb service for search functionality
+    @Autowired
+    private TMDbService tmdbService;
+    
+    // Search for movies (for autocomplete)
+    @GetMapping("/search")
+    public ResponseEntity<?> searchMovies(@RequestParam String query) {
+        if (query == null || query.trim().length() < 2) {
+            return ResponseEntity.badRequest().body(new ArrayList<>());
+        }
+        
+        // Call the TMDb service to search for movies
+        return tmdbService.searchMovie(query.trim())
+                .thenApply(response -> {
+                    if (response.getResults() == null) {
+                        return ResponseEntity.ok(new ArrayList<>());
+                    }
+                    
+                    // Convert to a simpler format for the frontend
+                    List<Map<String, Object>> results = response.getResults().stream()
+                            .limit(10) // Limit to 10 results
+                            .map(movie -> {
+                                Map<String, Object> simplified = new HashMap<>();
+                                simplified.put("id", movie.getId());
+                                simplified.put("title", movie.getTitle());
+                                simplified.put("releaseDate", movie.getReleaseDate());
+                                simplified.put("voteAverage", movie.getVoteAverage());
+                                simplified.put("posterPath", movie.getPosterPath());
+                                return simplified;
+                            })
+                            .collect(Collectors.<Map<String, Object>>toList());
+                    
+                    return ResponseEntity.ok(results);
+                })
+                .exceptionally(ex -> {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body(new ArrayList<>());
+                })
+                .join();
+    }
+    
     // Add a new movie to the watchlist
     @PostMapping
-    public CompletableFuture<ResponseEntity<Object>> addMovie(@RequestBody Map<String, String> request) {
+    public CompletableFuture<ResponseEntity<?>> addMovie(@RequestBody Map<String, String> request) {
         String title = request.get("title");
         
         // Make sure the title isn't empty or missing
@@ -36,11 +82,11 @@ public class MovieController {
         
         // Add the movie and return the result
         return movieService.addMovieToWatchlist(title.trim())
-                .thenApply(movie -> ResponseEntity.status(HttpStatus.CREATED).body((Object) new MovieResponse(movie)))
+                .<ResponseEntity<?>>thenApply(movie -> ResponseEntity.status(HttpStatus.CREATED).body(new MovieResponse(movie)))
                 .exceptionally(ex -> {
                     // Handle any errors that happen during movie creation
                     String errorMessage = ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
-                    return ResponseEntity.badRequest().body((Object) Map.of("error", errorMessage));
+                    return ResponseEntity.badRequest().body(Map.of("error", errorMessage));
                 });
     }
     
@@ -60,7 +106,7 @@ public class MovieController {
     
     // Get details for a specific movie by its ID
     @GetMapping("/{id}")
-    public ResponseEntity<Object> getMovie(@PathVariable Long id) {
+    public ResponseEntity<?> getMovie(@PathVariable Long id) {
         Optional<MovieResponse> movie = movieService.getMovieById(id);
         
         // Return the movie if found, otherwise return 404
@@ -72,7 +118,7 @@ public class MovieController {
     
     // Mark a movie as watched or unwatched
     @PatchMapping("/{id}/watched")
-    public ResponseEntity<Object> updateWatchedStatus(
+    public ResponseEntity<?> updateWatchedStatus(
             @PathVariable Long id, 
             @RequestBody Map<String, Boolean> request) {
         
@@ -93,7 +139,7 @@ public class MovieController {
     
     // Update a movie's rating
     @PatchMapping("/{id}/rating")
-    public ResponseEntity<Object> updateRating(
+    public ResponseEntity<?> updateRating(
             @PathVariable Long id, 
             @RequestBody Map<String, Integer> request) {
         
@@ -114,7 +160,7 @@ public class MovieController {
     
     // Remove a movie from the watchlist
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> deleteMovie(@PathVariable Long id) {
+    public ResponseEntity<?> deleteMovie(@PathVariable Long id) {
         boolean deleted = movieService.deleteMovie(id);
         
         // Confirm deletion or return 404 if movie wasn't found

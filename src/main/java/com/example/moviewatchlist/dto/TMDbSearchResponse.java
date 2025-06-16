@@ -30,6 +30,10 @@ public class TMDbSearchResponse {
         @JsonProperty("vote_average")
         private Double voteAverage;
         
+        // Add poster path field
+        @JsonProperty("poster_path")
+        private String posterPath;
+        
         // Standard getters and setters for all fields
         public Integer getId() { return id; }
         public void setId(Integer id) { this.id = id; }
@@ -45,5 +49,8 @@ public class TMDbSearchResponse {
         
         public Double getVoteAverage() { return voteAverage; }
         public void setVoteAverage(Double voteAverage) { this.voteAverage = voteAverage; }
+        
+        public String getPosterPath() { return posterPath; }
+        public void setPosterPath(String posterPath) { this.posterPath = posterPath; }
     }
 }
