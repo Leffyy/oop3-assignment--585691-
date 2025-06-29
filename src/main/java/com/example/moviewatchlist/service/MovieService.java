@@ -179,8 +179,13 @@ public class MovieService {
      * @return CompletableFuture containing the enriched and saved movie
      */
     private CompletableFuture<Movie> enrichMovieWithTmdbData(Movie movie, String title) {
-        return tmdbService.searchMovie(title)
-                .thenCompose(tmdbSearchResponse -> handleTmdbSearchResponse(movie, tmdbSearchResponse));
+        CompletableFuture<TMDbSearchResponse> tmdbFuture = tmdbService.searchMovie(title);
+        if (tmdbFuture == null) {
+            CompletableFuture<Movie> failed = new CompletableFuture<>();
+            failed.completeExceptionally(new NullPointerException("TMDbService.searchMovie returned null"));
+            return failed;
+        }
+        return tmdbFuture.thenCompose(tmdbSearchResponse -> handleTmdbSearchResponse(movie, tmdbSearchResponse));
     }
 
     // Extracted from enrichMovieWithTmdbData for method size and clarity
