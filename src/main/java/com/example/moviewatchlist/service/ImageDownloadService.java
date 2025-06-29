@@ -107,7 +107,16 @@ public class ImageDownloadService {
 
     /** Removes special characters from filename to avoid file system issues. */
     private String sanitizeFileName(String fileName) {
-        return fileName.replaceAll("[^a-zA-Z0-9.-]", "_");
+        // Remove all non-alphanumeric, dash, underscore, or dot
+        String sanitized = fileName.replaceAll("[^a-zA-Z0-9-_\\.]", "_");
+        // If there is more than one dot, keep only the last one (for extension)
+        int lastDot = sanitized.lastIndexOf('.');
+        if (lastDot > 0) {
+            String name = sanitized.substring(0, lastDot).replace(".", "_");
+            String ext = sanitized.substring(lastDot);
+            return name + ext;
+        }
+        return sanitized;
     }
 
     /** Extracts file extension from image path, defaults to .jpg if none found. */
