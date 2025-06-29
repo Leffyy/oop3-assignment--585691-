@@ -84,7 +84,9 @@ public class MovieService {
      */
     public CompletableFuture<Movie> addMovieByTitle(String title) {
         if (title == null || title.trim().isEmpty()) {
-            throw new IllegalArgumentException("Title cannot be empty");
+            CompletableFuture<Movie> failed = new CompletableFuture<>();
+            failed.completeExceptionally(new IllegalArgumentException("Movie title is required"));
+            return failed;
         }
         return addMovieToWatchlist(title.trim());
     }
@@ -97,7 +99,9 @@ public class MovieService {
      */
     public CompletableFuture<Movie> addMovieToWatchlist(String title) {
         if (title == null || title.trim().isEmpty()) {
-            throw new IllegalArgumentException("Title cannot be null or blank");
+            CompletableFuture<Movie> failed = new CompletableFuture<>();
+            failed.completeExceptionally(new IllegalArgumentException("Title cannot be null or blank"));
+            return failed;
         }
 
         CompletableFuture<OMDbResponse> omdbFuture = omdbService.getMovieData(title);
