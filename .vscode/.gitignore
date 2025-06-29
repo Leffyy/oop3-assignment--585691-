@@ -1,2 +1,30 @@
 # Ignore all Java class files
 *.class
+
+# Maven target directory
+/target/
+
+# Logs
+*.log
+
+# VS Code settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+*.iml
+.idea/
+*.ipr
+*.iws
+
+# Environment files
+.env
+
+# H2 database files (if used outside in-memory)
+*.h2.db
+
+# Movie images (generated at runtime)
+movie-images/
