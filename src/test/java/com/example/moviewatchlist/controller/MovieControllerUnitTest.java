@@ -64,6 +64,21 @@ class MovieControllerUnitTest {
     }
 
     @Test
+    void testAddMovieWithMissingTitleKey() {
+        MovieService mockService = mock(MovieService.class);
+        MovieController controller = new MovieController(mockService);
+
+        Map<String, String> request = Map.of(); // No "title" key
+        CompletableFuture<ResponseEntity<?>> responseFuture = controller.addMovie(request);
+        ResponseEntity<?> response = responseFuture.join();
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        Object body = response.getBody();
+        assertNotNull(body, "Response body should not be null");
+        assertTrue(body.toString().contains("Movie title is required"));
+    }
+
+    @Test
     void testAddMovieServiceThrowsException() {
         MovieService mockService = mock(MovieService.class);
         MovieController controller = new MovieController(mockService);

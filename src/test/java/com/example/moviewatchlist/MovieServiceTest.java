@@ -269,4 +269,31 @@ public class MovieServiceTest {
         // Then
         assertFalse(result.isPresent());
     }
+
+    @Test
+    void testAddMovieToWatchlist_NullTitle() {
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> movieService.addMovieToWatchlist(null));
+    }
+
+    @Test
+    void testAddMovieToWatchlist_BlankTitle() {
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> movieService.addMovieToWatchlist("   "));
+    }
+
+    @Test
+    void testAddMovieToWatchlist_OMDbServiceThrowsException() {
+        // Given
+        String movieTitle = "Inception";
+        when(omdbService.getMovieData(movieTitle))
+            .thenReturn(CompletableFuture.failedFuture(new RuntimeException("OMDb API error")));
+
+        // When
+        CompletableFuture<Movie> result = movieService.addMovieToWatchlist(movieTitle);
+
+        // Then
+        assertThrows(RuntimeException.class, () -> result.join());
+        verify(movieRepository, never()).save(any(Movie.class));
+    }
 }

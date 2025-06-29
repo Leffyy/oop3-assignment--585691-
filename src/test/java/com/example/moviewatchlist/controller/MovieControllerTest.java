@@ -4,7 +4,6 @@ import com.example.moviewatchlist.service.MovieService;
 import com.example.moviewatchlist.dto.MovieResponse;
 import com.example.moviewatchlist.dto.PaginatedResponse;
 import com.example.moviewatchlist.model.Movie;
-import com.example.moviewatchlist.controller.MovieController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -57,6 +56,18 @@ public class MovieControllerTest {
     }
 
     /**
+     * Tests adding a movie with a whitespace title returns a Bad Request status.
+     */
+    @Test
+    public void testAddMovieWithWhitespaceTitle() throws Exception {
+        Map<String, String> request = Map.of("title", "   ");
+        mockMvc.perform(post("/api/movies")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    /**
      * Tests retrieving movies with pagination parameters returns an OK status.
      */
     @Test
@@ -89,5 +100,21 @@ public class MovieControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Inception"));
+    }
+
+    /**
+     * Tests adding a movie when the service throws an exception returns a Bad Request status.
+     */
+    @Test
+    public void testAddMovieServiceThrowsException() throws Exception {
+        Map<String, String> request = Map.of("title", "Inception");
+        when(movieService.addMovieToWatchlist(anyString()))
+            .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Movie already exists")));
+
+        mockMvc.perform(post("/api/movies")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Movie already exists")));
     }
 }

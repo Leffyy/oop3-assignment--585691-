@@ -212,4 +212,35 @@ public class TMDbServiceTest {
         // Then
         verify(mockHttpClient).sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
     }
+
+    /**
+     * Tests TMDbService.searchMovie behavior when TMDb API returns invalid JSON.
+     */
+    @Test
+    void testSearchMovie_InvalidJson() throws Exception {
+        String movieTitle = "Inception";
+        String invalidJson = "{ invalid json }";
+
+        when(mockResponse.body()).thenReturn(invalidJson);
+        when(mockHttpClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+            .thenReturn(CompletableFuture.completedFuture(mockResponse));
+
+        CompletableFuture<TMDbSearchResponse> future = tmdbService.searchMovie(movieTitle);
+
+        assertThrows(RuntimeException.class, () -> future.join());
+    }
+
+    /**
+     * Tests TMDbService.searchMovie behavior when HttpClient throws an exception.
+     */
+    @Test
+    void testSearchMovie_HttpClientThrowsException() throws Exception {
+        String movieTitle = "Inception";
+        when(mockHttpClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+            .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Network error")));
+
+        CompletableFuture<TMDbSearchResponse> future = tmdbService.searchMovie(movieTitle);
+
+        assertThrows(RuntimeException.class, () -> future.join());
+    }
 }

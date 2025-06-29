@@ -158,4 +158,43 @@ public class OMDbServiceTest {
 
         verify(mockHttpClient).sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
     }
+
+    /**
+     * Tests OMDbService behavior when HttpClient throws an exception.
+     */
+    @Test
+    void testGetMovieData_HttpClientThrowsException() throws Exception {
+        String movieTitle = "Inception";
+        when(mockHttpClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+            .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Network error")));
+
+        CompletableFuture<OMDbResponse> future = omdbService.getMovieData(movieTitle);
+
+        assertThrows(RuntimeException.class, () -> future.join());
+    }
+
+    /**
+     * Tests OMDbService behavior when the response indicates success but is missing expected fields.
+     */
+    @Test
+    void testGetMovieData_ResponseTrueButMissingFields() throws Exception {
+        String movieTitle = "Unknown";
+        String jsonResponse = """
+            {
+                "Response": "True"
+            }
+            """;
+
+        when(mockResponse.body()).thenReturn(jsonResponse);
+        when(mockHttpClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+            .thenReturn(CompletableFuture.completedFuture(mockResponse));
+
+        CompletableFuture<OMDbResponse> future = omdbService.getMovieData(movieTitle);
+        OMDbResponse result = future.join();
+
+        assertNotNull(result);
+        assertEquals("True", result.getResponse());
+        assertNull(result.getTitle());
+        assertNull(result.getYear());
+    }
 }

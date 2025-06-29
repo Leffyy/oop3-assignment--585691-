@@ -32,6 +32,20 @@ class MovieRepositoryUnitTest {
     }
 
     @Test
+    void testFindById_NotFound() {
+        // Arrange
+        MovieRepository mockRepo = mock(MovieRepository.class);
+        when(mockRepo.findById(2L)).thenReturn(Optional.empty());
+
+        // Act
+        Optional<Movie> result = mockRepo.findById(2L);
+
+        // Assert
+        assertFalse(result.isPresent());
+        verify(mockRepo).findById(2L);
+    }
+
+    @Test
     void testExistsByTitleAndReleaseYear_Mockito() {
         // Arrange
         MovieRepository mockRepo = mock(MovieRepository.class);
@@ -43,5 +57,19 @@ class MovieRepositoryUnitTest {
         // Assert
         assertTrue(exists);
         verify(mockRepo).existsByTitleAndReleaseYear("Inception", "2010");
+    }
+
+    @Test
+    void testExistsByTitleAndReleaseYear_False() {
+        // Arrange
+        MovieRepository mockRepo = mock(MovieRepository.class);
+        when(mockRepo.existsByTitleAndReleaseYear("Nonexistent", "1999")).thenReturn(false);
+
+        // Act
+        boolean exists = mockRepo.existsByTitleAndReleaseYear("Nonexistent", "1999");
+
+        // Assert
+        assertFalse(exists);
+        verify(mockRepo).existsByTitleAndReleaseYear("Nonexistent", "1999");
     }
 }

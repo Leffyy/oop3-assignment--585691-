@@ -107,6 +107,18 @@ public class MovieRepositoryTest {
     }
 
     /**
+     * Tests deleting a non-existent movie (should not throw).
+     */
+    @Test
+    void testDeleteNonExistentMovie() {
+        // Should not throw any exception
+        movieRepository.deleteById(9999L);
+        entityManager.flush();
+        // Optionally, assert that nothing was deleted (if repo is empty)
+        assertEquals(0, movieRepository.count());
+    }
+
+    /**
      * Tests updating a movie's watched status and rating.
      */
     @Test
@@ -149,5 +161,36 @@ public class MovieRepositoryTest {
         assertEquals(2, foundMovie.getImagePaths().size());
         assertNotNull(foundMovie.getSimilarMovies());
         assertEquals(2, foundMovie.getSimilarMovies().size());
+    }
+
+    /**
+     * Tests saving a movie with minimal fields (only title and year).
+     */
+    @Test
+    void testSaveMovieWithMinimalFields() {
+        Movie minimalMovie = new Movie("Minimal", "2022", null, null);
+        Movie saved = movieRepository.save(minimalMovie);
+        assertNotNull(saved.getId());
+        assertEquals("Minimal", saved.getTitle());
+        assertEquals("2022", saved.getReleaseYear());
+    }
+
+    /**
+     * Tests saving a movie with null/empty optional fields.
+     */
+    @Test
+    void testSaveMovieWithNullOptionalFields() {
+        Movie movie = new Movie("NullFields", "2023", null, null);
+        movie.setPlot(null);
+        movie.setImdbRating(null);
+        movie.setImagePaths(null);
+        movie.setSimilarMovies(null);
+        Movie saved = movieRepository.save(movie);
+        assertNotNull(saved.getId());
+        assertEquals("NullFields", saved.getTitle());
+        assertNull(saved.getPlot());
+        assertNull(saved.getImdbRating());
+        assertNull(saved.getImagePaths());
+        assertNull(saved.getSimilarMovies());
     }
 }
