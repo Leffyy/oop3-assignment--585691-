@@ -77,7 +77,8 @@ public class ImageDownloadService {
             String safeImageName = sanitizeFileName(imageName);
 
             String fileName = safeTitle + "_" + safeImageName;
-            String localPath = imagesPath + fileName;
+            // Use Paths.get to join directory and filename safely
+            String localPath = Paths.get(imagesPath, fileName).toString();
             downloadTasks.add(downloadImage(imageUrl, localPath));
         }
         return downloadTasks;
@@ -113,8 +114,10 @@ public class ImageDownloadService {
 
     /** Removes special characters from filename to avoid file system issues. */
     private String sanitizeFileName(String fileName) {
-        // Replace all non-alphanumeric, dash, underscore, or dot with _
-        String sanitized = fileName.replaceAll("[^a-zA-Z0-9-_\\.]", "_");
+        // Replace all forbidden characters (\ / : * ? " < > |) with _
+        String sanitized = fileName.replaceAll("[\\\\/:*?\"<>|]", "_");
+        // Then replace anything not a-z, A-Z, 0-9, dash, underscore, dot with _
+        sanitized = sanitized.replaceAll("[^a-zA-Z0-9._-]", "_");
         // Replace all dots except the last one with _
         int lastDot = sanitized.lastIndexOf('.');
         if (lastDot > 0) {
