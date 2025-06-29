@@ -15,7 +15,6 @@ import static org.mockito.Mockito.*;
 
 /**
  * Pure unit tests for MovieController using JUnit and Mockito.
- * No Spring context or MockMvc is used.
  */
 class MovieControllerUnitTest {
 
@@ -32,6 +31,54 @@ class MovieControllerUnitTest {
         Object body = response.getBody();
         assertNotNull(body, "Response body should not be null");
         assertTrue(body.toString().contains("Movie title is required"));
+    }
+
+    @Test
+    void testAddMovieWithNullTitle() {
+        MovieService mockService = mock(MovieService.class);
+        MovieController controller = new MovieController(mockService);
+
+        Map<String, String> request = Map.of("title", null);
+        CompletableFuture<ResponseEntity<?>> responseFuture = controller.addMovie(request);
+        ResponseEntity<?> response = responseFuture.join();
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        Object body = response.getBody();
+        assertNotNull(body, "Response body should not be null");
+        assertTrue(body.toString().contains("Movie title is required"));
+    }
+
+    @Test
+    void testAddMovieWithWhitespaceTitle() {
+        MovieService mockService = mock(MovieService.class);
+        MovieController controller = new MovieController(mockService);
+
+        Map<String, String> request = Map.of("title", "   ");
+        CompletableFuture<ResponseEntity<?>> responseFuture = controller.addMovie(request);
+        ResponseEntity<?> response = responseFuture.join();
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        Object body = response.getBody();
+        assertNotNull(body, "Response body should not be null");
+        assertTrue(body.toString().contains("Movie title is required"));
+    }
+
+    @Test
+    void testAddMovieServiceThrowsException() {
+        MovieService mockService = mock(MovieService.class);
+        MovieController controller = new MovieController(mockService);
+
+        when(mockService.addMovieByTitle("Inception"))
+            .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Movie already exists")));
+
+        Map<String, String> request = Map.of("title", "Inception");
+        CompletableFuture<ResponseEntity<?>> responseFuture = controller.addMovie(request);
+        ResponseEntity<?> response = responseFuture.join();
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        Object body = response.getBody();
+        assertNotNull(body, "Response body should not be null");
+        assertTrue(body.toString().contains("Movie already exists"));
     }
 
     @Test
