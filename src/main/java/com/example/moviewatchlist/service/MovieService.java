@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Service class for managing movie watchlist operations.
@@ -31,6 +34,65 @@ public class MovieService {
     
     @Autowired
     private ImageDownloadService imageDownloadService;
+    
+    /**
+     * Search for movies using TMDb API.
+     * 
+     * @param query Search query (must be at least 2 characters)
+     * @return List of movie search results
+     * @throws IllegalArgumentException if query is too short
+     */
+    public CompletableFuture<List<Map<String, Object>>> searchMovies(String query) {
+        if (query == null || query.trim().length() < 2) {
+            return CompletableFuture.completedFuture(new ArrayList<>());
+        }
+        
+        return tmdbService.searchMovie(query.trim())
+                .thenApply(response -> {
+                    if (response.getResults() == null) {
+                        return new ArrayList<>();
+                    }
+                    
+                    return response.getResults().stream()
+                            .limit(10)
+                            .map(this::convertToSearchResult)
+                            .collect(Collectors.toList());
+                });
+    }
+    
+    /**
+     * Converts TMDb movie to simplified search result.
+     * 
+     * @param movie TMDb movie object
+     * @return Map containing simplified movie data
+     */
+    private Map<String, Object> convertToSearchResult(TMDbSearchResponse.TMDbMovie movie) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", movie.getId());
+        result.put("title", movie.getTitle());
+        result.put("releaseDate", movie.getReleaseDate());
+        result.put("voteAverage", movie.getVoteAverage());
+        result.put("posterPath", movie.getPosterPath());
+        return result;
+    }
+    
+    /**
+     * Adds a movie to the watchlist by title.
+     * Validates the title before processing.
+     * 
+     * @param title Movie title
+     * @return CompletableFuture containing the saved movie
+     * @throws IllegalArgumentException if title is empty or null
+     */
+    public CompletableFuture<Movie> addMovieByTitle(String title) {
+        if (title == null || title.trim().isEmpty()) {
+            return CompletableFuture.failedFuture(
+                new IllegalArgumentException("Movie title is required")
+            );
+        }
+        
+        return addMovieToWatchlist(title.trim());
+    }
     
     /**
      * Adds a new movie to the watchlist by searching for it using external APIs.
@@ -226,12 +288,17 @@ public class MovieService {
     
     /**
      * Retrieves a paginated list of movies from the watchlist.
+     * Validates pagination parameters.
      * 
      * @param page Page number (0-based)
      * @param size Number of items per page
      * @return PaginatedResponse containing movie data
      */
     public PaginatedResponse<MovieResponse> getMovies(int page, int size) {
+        // Validate and adjust pagination parameters
+        if (page < 0) page = 0;
+        if (size < 1 || size > 100) size = 10;
+        
         Pageable pageable = PageRequest.of(page, size);
         Page<Movie> moviePage = movieRepository.findAll(pageable);
         
@@ -254,8 +321,13 @@ public class MovieService {
      * @param movieId The movie ID
      * @param watched The new watched status
      * @return Optional containing the updated movie, or empty if not found
+     * @throws IllegalArgumentException if watched status is null
      */
-    public Optional<Movie> updateWatchedStatus(Long movieId, boolean watched) {
+    public Optional<Movie> updateWatchedStatus(Long movieId, Boolean watched) {
+        if (watched == null) {
+            throw new IllegalArgumentException("Watched status is required");
+        }
+        
         Optional<Movie> movieOpt = movieRepository.findById(movieId);
         if (movieOpt.isPresent()) {
             Movie movie = movieOpt.get();

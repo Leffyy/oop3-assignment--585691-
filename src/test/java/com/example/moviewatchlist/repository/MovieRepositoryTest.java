@@ -1,4 +1,4 @@
-package com.Repository;
+package com.example.moviewatchlist.repository;
 
 import com.example.moviewatchlist.model.Movie;
 import org.junit.jupiter.api.BeforeEach;

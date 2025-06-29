@@ -3,6 +3,7 @@ package com.example.moviewatchlist;
 import com.example.moviewatchlist.dto.TMDbSearchResponse;
 import com.example.moviewatchlist.dto.TMDbImagesResponse;
 import com.example.moviewatchlist.dto.TMDbSimilarResponse;
+import com.example.moviewatchlist.service.TMDbService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@SuppressWarnings("unchecked")
 @ExtendWith(MockitoExtension.class)
 public class TMDbServiceTest {
 
@@ -58,7 +60,7 @@ public class TMDbServiceTest {
 
         when(mockResponse.body()).thenReturn(jsonResponse);
         when(mockHttpClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-            .thenReturn(CompletableFuture.completedFuture(mockResponse));
+            .thenReturn(CompletableFuture.<HttpResponse<String>>completedFuture(mockResponse));
 
         // When
         CompletableFuture<TMDbSearchResponse> future = tmdbService.searchMovie(movieTitle);
@@ -68,7 +70,7 @@ public class TMDbServiceTest {
         assertNotNull(result);
         assertNotNull(result.getResults());
         assertEquals(1, result.getResults().size());
-        
+
         TMDbSearchResponse.TMDbMovie movie = result.getResults().get(0);
         assertEquals(27205, movie.getId());
         assertEquals("Inception", movie.getTitle());
@@ -88,7 +90,7 @@ public class TMDbServiceTest {
 
         when(mockResponse.body()).thenReturn(jsonResponse);
         when(mockHttpClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-            .thenReturn(CompletableFuture.completedFuture(mockResponse));
+            .thenReturn(CompletableFuture.<HttpResponse<String>>completedFuture(mockResponse));
 
         // When
         CompletableFuture<TMDbSearchResponse> future = tmdbService.searchMovie(movieTitle);
@@ -127,7 +129,7 @@ public class TMDbServiceTest {
 
         when(mockResponse.body()).thenReturn(jsonResponse);
         when(mockHttpClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-            .thenReturn(CompletableFuture.completedFuture(mockResponse));
+            .thenReturn(CompletableFuture.<HttpResponse<String>>completedFuture(mockResponse));
 
         // When
         CompletableFuture<TMDbImagesResponse> future = tmdbService.getMovieImages(movieId);
@@ -163,7 +165,7 @@ public class TMDbServiceTest {
 
         when(mockResponse.body()).thenReturn(jsonResponse);
         when(mockHttpClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-            .thenReturn(CompletableFuture.completedFuture(mockResponse));
+            .thenReturn(CompletableFuture.<HttpResponse<String>>completedFuture(mockResponse));
 
         // When
         CompletableFuture<TMDbSimilarResponse> future = tmdbService.getSimilarMovies(movieId);
@@ -194,7 +196,7 @@ public class TMDbServiceTest {
                 String url = request.uri().toString();
                 // Verify URL encoding
                 assertTrue(url.contains("The%20Dark%20Knight"));
-                return CompletableFuture.completedFuture(mockResponse);
+                return CompletableFuture.<HttpResponse<String>>completedFuture(mockResponse);
             });
 
         // When

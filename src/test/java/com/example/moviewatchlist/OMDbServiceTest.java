@@ -1,11 +1,11 @@
 package com.example.moviewatchlist;
 
 import com.example.moviewatchlist.dto.OMDbResponse;
+import com.example.moviewatchlist.service.OMDbService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockedConstruction;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@SuppressWarnings("unchecked")
 @ExtendWith(MockitoExtension.class)
 public class OMDbServiceTest {
 
@@ -55,8 +56,11 @@ public class OMDbServiceTest {
             """;
 
         when(mockResponse.body()).thenReturn(jsonResponse);
-        when(mockHttpClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-            .thenReturn(CompletableFuture.completedFuture(mockResponse));
+        when(mockHttpClient.sendAsync(
+                any(HttpRequest.class),
+                any(HttpResponse.BodyHandler.class)
+            ))
+            .thenReturn(CompletableFuture.<HttpResponse<String>>completedFuture(mockResponse));
 
         // When
         CompletableFuture<OMDbResponse> future = omdbService.getMovieData(movieTitle);
@@ -83,8 +87,11 @@ public class OMDbServiceTest {
             """;
 
         when(mockResponse.body()).thenReturn(jsonResponse);
-        when(mockHttpClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-            .thenReturn(CompletableFuture.completedFuture(mockResponse));
+        when(mockHttpClient.sendAsync(
+                any(HttpRequest.class),
+                any(HttpResponse.BodyHandler.class)
+            ))
+            .thenReturn(CompletableFuture.<HttpResponse<String>>completedFuture(mockResponse));
 
         // When
         CompletableFuture<OMDbResponse> future = omdbService.getMovieData(movieTitle);
@@ -104,8 +111,11 @@ public class OMDbServiceTest {
         String invalidJson = "{ invalid json }";
 
         when(mockResponse.body()).thenReturn(invalidJson);
-        when(mockHttpClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-            .thenReturn(CompletableFuture.completedFuture(mockResponse));
+        when(mockHttpClient.sendAsync(
+                any(HttpRequest.class),
+                any(HttpResponse.BodyHandler.class)
+            ))
+            .thenReturn(CompletableFuture.<HttpResponse<String>>completedFuture(mockResponse));
 
         // When & Then
         CompletableFuture<OMDbResponse> future = omdbService.getMovieData(movieTitle);
@@ -125,7 +135,10 @@ public class OMDbServiceTest {
             """;
 
         when(mockResponse.body()).thenReturn(jsonResponse);
-        when(mockHttpClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+        when(mockHttpClient.sendAsync(
+                any(HttpRequest.class),
+                any(HttpResponse.BodyHandler.class)
+            ))
             .thenAnswer(invocation -> {
                 HttpRequest request = invocation.getArgument(0);
                 String url = request.uri().toString();
