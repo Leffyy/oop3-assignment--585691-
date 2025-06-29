@@ -81,7 +81,6 @@ public class MovieService {
      *
      * @param title Movie title
      * @return CompletableFuture containing the saved movie
-     * @throws IllegalArgumentException if title is empty or null
      */
     public CompletableFuture<Movie> addMovieByTitle(String title) {
         if (title == null || title.trim().isEmpty()) {
@@ -89,7 +88,6 @@ public class MovieService {
             failed.completeExceptionally(new IllegalArgumentException("Title cannot be empty"));
             return failed;
         }
-
         return addMovieToWatchlist(title.trim());
     }
 
@@ -98,15 +96,22 @@ public class MovieService {
      *
      * @param title The movie title to search for
      * @return CompletableFuture containing the saved movie
-     * @throws RuntimeException if movie not found or already exists
      */
     public CompletableFuture<Movie> addMovieToWatchlist(String title) {
         if (title == null || title.trim().isEmpty()) {
-            throw new IllegalArgumentException("Title cannot be null or blank");
+            CompletableFuture<Movie> failed = new CompletableFuture<>();
+            failed.completeExceptionally(new IllegalArgumentException("Title cannot be null or blank"));
+            return failed;
         }
 
-        return omdbService.getMovieData(title)
-                .thenCompose(omdbResponse -> handleOmdbResponse(omdbResponse, title));
+        CompletableFuture<OMDbResponse> omdbFuture = omdbService.getMovieData(title);
+        if (omdbFuture == null) {
+            CompletableFuture<Movie> failed = new CompletableFuture<>();
+            failed.completeExceptionally(new NullPointerException("OMDbService.getMovieData returned null"));
+            return failed;
+        }
+
+        return omdbFuture.thenCompose(omdbResponse -> handleOmdbResponse(omdbResponse, title));
     }
 
     // Extracted from addMovieToWatchlist for method size and clarity
