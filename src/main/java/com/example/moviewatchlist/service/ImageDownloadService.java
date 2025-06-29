@@ -70,8 +70,9 @@ public class ImageDownloadService {
         for (int i = 0; i < imagesToDownload; i++) {
             String imagePath = imagePaths.get(i);
             String imageUrl = "https://image.tmdb.org/t/p/w780" + imagePath;
-            String fileName = sanitizeFileName(movieTitle) + "_" + i + getFileExtension(imagePath);
-            String localPath = imagesPath + fileName;
+            String fileName = movieTitle + "_" + i + getFileExtension(imagePath);
+            String sanitizedFileName = sanitizeFileName(fileName);
+            String localPath = imagesPath + sanitizedFileName;
             downloadTasks.add(downloadImage(imageUrl, localPath));
         }
         return downloadTasks;
