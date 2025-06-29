@@ -1,0 +1,38 @@
+-------------------------------------------------------------------------------
+Test set: com.example.moviewatchlist.controller.MovieControllerUnitTest
+-------------------------------------------------------------------------------
+Tests run: 6, Failures: 0, Errors: 4, Skipped: 0, Time elapsed: 0.074 s <<< FAILURE! -- in com.example.moviewatchlist.controller.MovieControllerUnitTest
+com.example.moviewatchlist.controller.MovieControllerUnitTest.testAddMovieWithWhitespaceTitle -- Time elapsed: 0.010 s <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "java.util.concurrent.CompletableFuture.thenApply(java.util.function.Function)" because the return value of "com.example.moviewatchlist.service.MovieService.addMovieByTitle(String)" is null
+	at com.example.moviewatchlist.controller.MovieController.addMovie(MovieController.java:53)
+	at com.example.moviewatchlist.controller.MovieControllerUnitTest.testAddMovieWithWhitespaceTitle(MovieControllerUnitTest.java:57)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+com.example.moviewatchlist.controller.MovieControllerUnitTest.testAddMovieWithMissingTitleKey -- Time elapsed: 0.004 s <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "java.util.concurrent.CompletableFuture.thenApply(java.util.function.Function)" because the return value of "com.example.moviewatchlist.service.MovieService.addMovieByTitle(String)" is null
+	at com.example.moviewatchlist.controller.MovieController.addMovie(MovieController.java:53)
+	at com.example.moviewatchlist.controller.MovieControllerUnitTest.testAddMovieWithMissingTitleKey(MovieControllerUnitTest.java:72)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+com.example.moviewatchlist.controller.MovieControllerUnitTest.testAddMovieWithNullTitle -- Time elapsed: 0.002 s <<< ERROR!
+java.lang.NullPointerException
+	at java.base/java.util.Objects.requireNonNull(Objects.java:209)
+	at java.base/java.util.ImmutableCollections$Map1.<init>(ImmutableCollections.java:1105)
+	at java.base/java.util.Map.of(Map.java:1353)
+	at com.example.moviewatchlist.controller.MovieControllerUnitTest.testAddMovieWithNullTitle(MovieControllerUnitTest.java:41)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+com.example.moviewatchlist.controller.MovieControllerUnitTest.testAddMovieWithEmptyTitle -- Time elapsed: 0.003 s <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "java.util.concurrent.CompletableFuture.thenApply(java.util.function.Function)" because the return value of "com.example.moviewatchlist.service.MovieService.addMovieByTitle(String)" is null
+	at com.example.moviewatchlist.controller.MovieController.addMovie(MovieController.java:53)
+	at com.example.moviewatchlist.controller.MovieControllerUnitTest.testAddMovieWithEmptyTitle(MovieControllerUnitTest.java:27)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
