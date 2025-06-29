@@ -273,14 +273,17 @@ public class MovieServiceTest {
 
     @Test
     void testAddMovieToWatchlist_NullTitle() {
-        // When & Then
-        assertThrows(IllegalArgumentException.class, () -> movieService.addMovieToWatchlist(null));
+        CompletableFuture<Movie> future = movieService.addMovieToWatchlist(null);
+        // This will throw CompletionException wrapping IllegalArgumentException
+        Throwable ex = assertThrows(Exception.class, future::join);
+        assertTrue(ex.getCause() instanceof IllegalArgumentException);
     }
 
     @Test
     void testAddMovieToWatchlist_BlankTitle() {
-        // When & Then
-        assertThrows(IllegalArgumentException.class, () -> movieService.addMovieToWatchlist("   "));
+        CompletableFuture<Movie> future = movieService.addMovieToWatchlist("   ");
+        Throwable ex = assertThrows(Exception.class, future::join);
+        assertTrue(ex.getCause() instanceof IllegalArgumentException);
     }
 
     @Test
