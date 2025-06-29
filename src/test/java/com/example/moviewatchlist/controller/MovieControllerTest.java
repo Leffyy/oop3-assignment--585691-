@@ -97,7 +97,7 @@ public class MovieControllerTest {
             .id(1L)
             .build();
 
-        when(movieService.addMovieToWatchlist(anyString()))
+        when(movieService.addMovieByTitle(anyString()))
             .thenReturn(CompletableFuture.completedFuture(mockMovie));
 
         mockMvc.perform(post("/api/movies")
@@ -113,7 +113,7 @@ public class MovieControllerTest {
     @Test
     public void testAddMovieServiceThrowsException() throws Exception {
         Map<String, String> request = Map.of("title", "Inception");
-        when(movieService.addMovieToWatchlist(anyString()))
+        when(movieService.addMovieByTitle(anyString()))
             .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Movie already exists")));
 
         mockMvc.perform(post("/api/movies")

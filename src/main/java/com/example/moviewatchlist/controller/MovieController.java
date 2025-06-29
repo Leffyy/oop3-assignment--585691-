@@ -7,6 +7,8 @@ import com.example.moviewatchlist.service.MovieService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.async.DeferredResult;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -47,20 +49,26 @@ public class MovieController {
      * @return The created movie or error response
      */
     @PostMapping
-    public CompletableFuture<ResponseEntity<?>> addMovie(@RequestBody Map<String, String> request) {
+    public DeferredResult<ResponseEntity<?>> addMovie(@RequestBody Map<String, String> request) {
+        DeferredResult<ResponseEntity<?>> output = new DeferredResult<>();
         String title = request.get("title");
-        return movieService.addMovieByTitle(title)
-                .<ResponseEntity<?>>thenApply(movie -> ResponseEntity.status(HttpStatus.CREATED).body(new MovieResponse(movie)))
-                .exceptionally(this::handleAddMovieException);
-    }
-
-    private ResponseEntity<?> handleAddMovieException(Throwable ex) {
-        Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-        if (cause instanceof IllegalArgumentException) {
-            return ResponseEntity.badRequest().body(Map.of("error", cause.getMessage()));
+        if (title == null || title.trim().isEmpty()) {
+            output.setResult(ResponseEntity.badRequest().body(Map.of("error", "Title must not be empty")));
+            return output;
         }
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", cause.getMessage()));
+        movieService.addMovieByTitle(title)
+            .thenAccept(movie -> output.setResult(ResponseEntity.status(HttpStatus.CREATED).body(new MovieResponse(movie))))
+            .exceptionally(ex -> {
+                Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                if (cause instanceof IllegalArgumentException) {
+                    output.setResult(ResponseEntity.badRequest().body(Map.of("error", cause.getMessage())));
+                } else {
+                    output.setResult(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body(Map.of("error", cause.getMessage())));
+                }
+                return null;
+            });
+        return output;
     }
 
     /**
