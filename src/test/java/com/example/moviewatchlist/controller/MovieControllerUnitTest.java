@@ -6,6 +6,7 @@ import com.example.moviewatchlist.service.MovieService;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.context.request.async.DeferredResult;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,8 +38,8 @@ class MovieControllerUnitTest {
         // Act
         Map<String, String> request = new HashMap<>();
         request.put("title", "");
-        CompletableFuture<ResponseEntity<?>> responseFuture = controller.addMovie(request);
-        ResponseEntity<?> response = responseFuture.join();
+        DeferredResult<ResponseEntity<?>> result = controller.addMovie(request);
+        ResponseEntity<?> response = getResult(result);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -64,8 +65,8 @@ class MovieControllerUnitTest {
         // Act
         Map<String, String> request = new HashMap<>();
         request.put("title", null);
-        CompletableFuture<ResponseEntity<?>> responseFuture = controller.addMovie(request);
-        ResponseEntity<?> response = responseFuture.join();
+        DeferredResult<ResponseEntity<?>> result = controller.addMovie(request);
+        ResponseEntity<?> response = getResult(result);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -91,8 +92,8 @@ class MovieControllerUnitTest {
         // Act
         Map<String, String> request = new HashMap<>();
         request.put("title", "   ");
-        CompletableFuture<ResponseEntity<?>> responseFuture = controller.addMovie(request);
-        ResponseEntity<?> response = responseFuture.join();
+        DeferredResult<ResponseEntity<?>> result = controller.addMovie(request);
+        ResponseEntity<?> response = getResult(result);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -117,8 +118,8 @@ class MovieControllerUnitTest {
 
         // Act
         Map<String, String> request = new HashMap<>(); // No "title" key
-        CompletableFuture<ResponseEntity<?>> responseFuture = controller.addMovie(request);
-        ResponseEntity<?> response = responseFuture.join();
+        DeferredResult<ResponseEntity<?>> result = controller.addMovie(request);
+        ResponseEntity<?> response = getResult(result);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -137,14 +138,16 @@ class MovieControllerUnitTest {
         when(mockService.addMovieByTitle("Inception"))
             .thenReturn(CompletableFuture.failedFuture(
                 new RuntimeException("Movie already exists")));
-        
+
         MovieController controller = new MovieController(mockService);
 
         // Act
         Map<String, String> request = new HashMap<>();
         request.put("title", "Inception");
-        CompletableFuture<ResponseEntity<?>> responseFuture = controller.addMovie(request);
-        ResponseEntity<?> response = responseFuture.join();
+        DeferredResult<ResponseEntity<?>> result = controller.addMovie(request);
+
+        // Wait for async result
+        ResponseEntity<?> response = getResult(result);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -177,8 +180,10 @@ class MovieControllerUnitTest {
         // Act
         Map<String, String> request = new HashMap<>();
         request.put("title", "Inception");
-        CompletableFuture<ResponseEntity<?>> responseFuture = controller.addMovie(request);
-        ResponseEntity<?> response = responseFuture.join();
+        DeferredResult<ResponseEntity<?>> result = controller.addMovie(request);
+
+        // Wait for async result
+        ResponseEntity<?> response = getResult(result);
 
         // Assert
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -187,5 +192,16 @@ class MovieControllerUnitTest {
         assertTrue(body instanceof MovieResponse);
         assertEquals("Inception", ((MovieResponse) body).getTitle());
         verify(mockService).addMovieByTitle("Inception");
+    }
+
+    // Utility method to wait for DeferredResult (with timeout)
+    private ResponseEntity<?> getResult(DeferredResult<ResponseEntity<?>> result) {
+        for (int i = 0; i < 100; i++) {
+            Object value = result.getResult();
+            if (value != null) return (ResponseEntity<?>) value;
+            try { Thread.sleep(10); } catch (InterruptedException ignored) {}
+        }
+        fail("DeferredResult did not complete in time");
+        return null;
     }
 }
