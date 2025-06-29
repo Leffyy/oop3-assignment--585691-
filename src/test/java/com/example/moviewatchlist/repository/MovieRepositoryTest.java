@@ -32,12 +32,22 @@ public class MovieRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        // Create test movies
-        movie1 = new Movie("Inception", "2010", "Christopher Nolan", "Sci-Fi");
+        // Create test movies using builder
+        movie1 = Movie.builder()
+            .title("Inception")
+            .releaseYear("2010")
+            .director("Christopher Nolan")
+            .genre("Sci-Fi")
+            .build();
         movie1.setPlot("A thief who enters dreams");
         movie1.setImdbRating("8.8");
 
-        movie2 = new Movie("The Dark Knight", "2008", "Christopher Nolan", "Action");
+        movie2 = Movie.builder()
+            .title("The Dark Knight")
+            .releaseYear("2008")
+            .director("Christopher Nolan")
+            .genre("Action")
+            .build();
         movie2.setPlot("Batman faces the Joker");
         movie2.setImdbRating("9.0");
     }
@@ -128,7 +138,7 @@ public class MovieRepositoryTest {
         savedMovie.setRating(5);
         Movie updatedMovie = movieRepository.save(savedMovie);
         assertEquals(savedMovie.getId(), updatedMovie.getId());
-        assertTrue(updatedMovie.isWatched());
+        assertTrue(Boolean.TRUE.equals(updatedMovie.getWatched()));
         assertEquals(5, updatedMovie.getRating());
     }
 
@@ -168,7 +178,10 @@ public class MovieRepositoryTest {
      */
     @Test
     void testSaveMovieWithMinimalFields() {
-        Movie minimalMovie = new Movie("Minimal", "2022", null, null);
+        Movie minimalMovie = Movie.builder()
+            .title("Minimal")
+            .releaseYear("2022")
+            .build();
         Movie saved = movieRepository.save(minimalMovie);
         assertNotNull(saved.getId());
         assertEquals("Minimal", saved.getTitle());
@@ -180,7 +193,10 @@ public class MovieRepositoryTest {
      */
     @Test
     void testSaveMovieWithNullOptionalFields() {
-        Movie movie = new Movie("NullFields", "2023", null, null);
+        Movie movie = Movie.builder()
+            .title("NullFields")
+            .releaseYear("2023")
+            .build();
         movie.setPlot(null);
         movie.setImdbRating(null);
         movie.setImagePaths(null);

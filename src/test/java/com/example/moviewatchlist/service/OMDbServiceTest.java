@@ -1,7 +1,6 @@
-package com.example.moviewatchlist;
+package com.example.moviewatchlist.service;
 
 import com.example.moviewatchlist.dto.OMDbResponse;
-import com.example.moviewatchlist.service.OMDbService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
