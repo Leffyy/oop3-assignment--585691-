@@ -45,7 +45,11 @@ class MovieControllerUnitTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         Object body = response.getBody();
         assertNotNull(body, "Response body should not be null");
-        assertTrue(body.toString().contains("Movie title is required"));
+        if (body instanceof Map<?, ?> map) {
+            assertTrue(map.get("error").toString().contains("Movie title is required"));
+        } else {
+            fail("Expected error response as a Map");
+        }
         verify(mockService).addMovieByTitle("");
     }
 
@@ -72,7 +76,11 @@ class MovieControllerUnitTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         Object body = response.getBody();
         assertNotNull(body, "Response body should not be null");
-        assertTrue(body.toString().contains("Movie title is required"));
+        if (body instanceof Map<?, ?> map) {
+            assertTrue(map.get("error").toString().contains("Movie title is required"));
+        } else {
+            fail("Expected error response as a Map");
+        }
         verify(mockService).addMovieByTitle(null);
     }
 
@@ -99,7 +107,11 @@ class MovieControllerUnitTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         Object body = response.getBody();
         assertNotNull(body, "Response body should not be null");
-        assertTrue(body.toString().contains("Movie title is required"));
+        if (body instanceof Map<?, ?> map) {
+            assertTrue(map.get("error").toString().contains("Movie title is required"));
+        } else {
+            fail("Expected error response as a Map");
+        }
         verify(mockService).addMovieByTitle("   ");
     }
 
@@ -125,7 +137,11 @@ class MovieControllerUnitTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         Object body = response.getBody();
         assertNotNull(body, "Response body should not be null");
-        assertTrue(body.toString().contains("Movie title is required"));
+        if (body instanceof Map<?, ?> map) {
+            assertTrue(map.get("error").toString().contains("Movie title is required"));
+        } else {
+            fail("Expected error response as a Map");
+        }
     }
 
     /**
@@ -153,7 +169,11 @@ class MovieControllerUnitTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         Object body = response.getBody();
         assertNotNull(body, "Response body should not be null");
-        assertTrue(body.toString().contains("Movie already exists"));
+        if (body instanceof Map<?, ?> map) {
+            assertTrue(map.get("error").toString().contains("Movie already exists"));
+        } else {
+            fail("Expected error response as a Map");
+        }
         verify(mockService).addMovieByTitle("Inception");
     }
 

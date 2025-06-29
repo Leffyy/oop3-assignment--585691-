@@ -100,9 +100,15 @@ public class MovieControllerTest {
         when(movieService.addMovieByTitle(anyString()))
             .thenReturn(CompletableFuture.completedFuture(mockMovie));
 
-        mockMvc.perform(post("/api/movies")
+        // Step 1: Perform the request and check async started
+        var mvcResult = mockMvc.perform(post("/api/movies")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // Step 2: Dispatch the async result and check the response
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Inception"));
     }
@@ -116,9 +122,15 @@ public class MovieControllerTest {
         when(movieService.addMovieByTitle(anyString()))
             .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Movie already exists")));
 
-        mockMvc.perform(post("/api/movies")
+        // Step 1: Perform the request and check async started
+        var mvcResult = mockMvc.perform(post("/api/movies")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // Step 2: Dispatch the async result and check the response
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Movie already exists")));
     }
