@@ -116,10 +116,16 @@ public class MovieService {
 
     // Extracted from addMovieToWatchlist for method size and clarity
     private CompletableFuture<Movie> handleOmdbResponse(OMDbResponse omdbResponse, String title) {
-        validateOmdbResponse(omdbResponse);
-        checkIfMovieExists(omdbResponse.getTitle(), omdbResponse.getYear());
-        Movie movie = createMovieFromOmdbData(omdbResponse);
-        return enrichMovieWithTmdbData(movie, title);
+        try {
+            validateOmdbResponse(omdbResponse);
+            checkIfMovieExists(omdbResponse.getTitle(), omdbResponse.getYear());
+            Movie movie = createMovieFromOmdbData(omdbResponse);
+            return enrichMovieWithTmdbData(movie, title);
+        } catch (Exception ex) {
+            CompletableFuture<Movie> failed = new CompletableFuture<>();
+            failed.completeExceptionally(ex);
+            return failed;
+        }
     }
 
     /**
