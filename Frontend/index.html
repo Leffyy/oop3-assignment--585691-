@@ -716,6 +716,7 @@
         let totalPages = 0;
         let movies = [];
         let currentView = 'grid';
+        let currentModalMovie = null; // <-- Add this line
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', () => {
@@ -914,6 +915,7 @@
 
         // Display Movie Modal
         function displayMovieModal(movie) {
+            currentModalMovie = movie; // <-- Track the current movie in the modal
             const modalTitle = document.getElementById('modal-title');
             const modalBody = document.getElementById('modal-body');
             
@@ -956,9 +958,7 @@
                             <div class="rating-stars" id="rating-stars">
                                 ${[1, 2, 3, 4, 5].map(star => `
                                     <span class="rating-star ${movie.rating >= star ? 'active' : ''}" 
-                                          onclick="rateMovie(${movie.id}, ${star})"
-                                          onmouseover="hoverRating(${star})"
-                                          onmouseout="resetRating(${movie.rating || 0})">
+                                          onclick="rateMovie(${movie.id}, ${star})">
                                         ★
                                     </span>
                                 `).join('')}
@@ -1002,6 +1002,12 @@
 
         // Rate Movie
         async function rateMovie(movieId, rating) {
+            // Optimistically update the UI
+            if (currentModalMovie && currentModalMovie.id === movieId) {
+                currentModalMovie.rating = rating;
+                updateStars(rating); // Only update the stars, not the whole modal
+            }
+
             try {
                 const response = await fetch(`${API_BASE_URL}/movies/${movieId}/rating`, {
                     method: 'PATCH',
@@ -1010,11 +1016,10 @@
                     },
                     body: JSON.stringify({ rating })
                 });
-                
+
                 if (response.ok) {
                     showToast('Rating updated!', 'success');
-                    resetRating(rating);
-                    loadMovies();
+                    // Optionally, fetch the updated movie from the backend for consistency
                 } else {
                     showToast('Failed to update rating', 'error');
                 }
@@ -1154,6 +1159,13 @@
                 handleImageError(e.target);
             }
         }, true);
+
+        function updateStars(rating) {
+            const stars = document.querySelectorAll('#rating-stars .rating-star');
+            stars.forEach((star, idx) => {
+                star.classList.toggle('active', idx < rating);
+            });
+        }
     </script>
 </body>
 </html>

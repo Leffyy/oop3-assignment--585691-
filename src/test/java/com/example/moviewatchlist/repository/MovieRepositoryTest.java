@@ -36,60 +36,56 @@ public class MovieRepositoryTest {
         movie1 = new Movie("Inception", "2010", "Christopher Nolan", "Sci-Fi");
         movie1.setPlot("A thief who enters dreams");
         movie1.setImdbRating("8.8");
-        
+
         movie2 = new Movie("The Dark Knight", "2008", "Christopher Nolan", "Action");
         movie2.setPlot("Batman faces the Joker");
         movie2.setImdbRating("9.0");
     }
 
+    /**
+     * Tests saving a movie to the repository.
+     */
     @Test
     void testSaveMovie() {
-        // When
         Movie savedMovie = movieRepository.save(movie1);
-        
-        // Then
         assertNotNull(savedMovie);
         assertNotNull(savedMovie.getId());
         assertEquals("Inception", savedMovie.getTitle());
         assertEquals("2010", savedMovie.getReleaseYear());
     }
 
+    /**
+     * Tests finding a movie by its ID.
+     */
     @Test
     void testFindById() {
-        // Given
         Movie savedMovie = entityManager.persistAndFlush(movie1);
-        
-        // When
         Movie foundMovie = movieRepository.findById(savedMovie.getId()).orElse(null);
-        
-        // Then
         assertNotNull(foundMovie);
         assertEquals(savedMovie.getId(), foundMovie.getId());
         assertEquals("Inception", foundMovie.getTitle());
     }
 
+    /**
+     * Tests existence check by title and release year.
+     */
     @Test
     void testExistsByTitleAndReleaseYear() {
-        // Given
         entityManager.persistAndFlush(movie1);
-        
-        // When & Then
         assertTrue(movieRepository.existsByTitleAndReleaseYear("Inception", "2010"));
         assertFalse(movieRepository.existsByTitleAndReleaseYear("Inception", "2011"));
         assertFalse(movieRepository.existsByTitleAndReleaseYear("Interstellar", "2010"));
     }
 
+    /**
+     * Tests paginated retrieval of movies.
+     */
     @Test
     void testFindAllWithPagination() {
-        // Given
         entityManager.persistAndFlush(movie1);
         entityManager.persistAndFlush(movie2);
-        
-        // When
         Pageable pageable = PageRequest.of(0, 1);
         Page<Movie> page = movieRepository.findAll(pageable);
-        
-        // Then
         assertNotNull(page);
         assertEquals(1, page.getContent().size());
         assertEquals(2, page.getTotalElements());
@@ -98,69 +94,103 @@ public class MovieRepositoryTest {
         assertFalse(page.isLast());
     }
 
+    /**
+     * Tests deleting a movie by its ID.
+     */
     @Test
     void testDeleteMovie() {
-        // Given
         Movie savedMovie = entityManager.persistAndFlush(movie1);
         Long movieId = savedMovie.getId();
-        
-        // When
         movieRepository.deleteById(movieId);
         entityManager.flush();
-        
-        // Then
         assertFalse(movieRepository.existsById(movieId));
     }
 
+    /**
+     * Tests deleting a non-existent movie (should not throw).
+     */
+    @Test
+    void testDeleteNonExistentMovie() {
+        // Should not throw any exception
+        movieRepository.deleteById(9999L);
+        entityManager.flush();
+        // Optionally, assert that nothing was deleted (if repo is empty)
+        assertEquals(0, movieRepository.count());
+    }
+
+    /**
+     * Tests updating a movie's watched status and rating.
+     */
     @Test
     void testUpdateMovie() {
-        // Given
         Movie savedMovie = entityManager.persistAndFlush(movie1);
-        
-        // When
         savedMovie.setWatched(true);
         savedMovie.setRating(5);
         Movie updatedMovie = movieRepository.save(savedMovie);
-        
-        // Then
         assertEquals(savedMovie.getId(), updatedMovie.getId());
         assertTrue(updatedMovie.isWatched());
         assertEquals(5, updatedMovie.getRating());
     }
 
+    /**
+     * Tests retrieving all movies from the repository.
+     */
     @Test
     void testFindAllMovies() {
-        // Given
         entityManager.persistAndFlush(movie1);
         entityManager.persistAndFlush(movie2);
-        
-        // When
         var movies = movieRepository.findAll();
-        
-        // Then
         assertEquals(2, movies.size());
         assertTrue(movies.stream().anyMatch(m -> m.getTitle().equals("Inception")));
         assertTrue(movies.stream().anyMatch(m -> m.getTitle().equals("The Dark Knight")));
     }
 
+    /**
+     * Tests saving and retrieving movies with collection fields.
+     */
     @Test
     void testMovieWithCollections() {
-        // Given
         movie1.setImagePaths(Arrays.asList("/path/to/image1.jpg", "/path/to/image2.jpg"));
         movie1.setSimilarMovies(Arrays.asList("Interstellar", "The Prestige"));
-        
-        // When
         Movie savedMovie = movieRepository.save(movie1);
         entityManager.flush();
         entityManager.clear(); // Clear cache to force reload from DB
-        
         Movie foundMovie = movieRepository.findById(savedMovie.getId()).orElse(null);
-        
-        // Then
         assertNotNull(foundMovie);
         assertNotNull(foundMovie.getImagePaths());
         assertEquals(2, foundMovie.getImagePaths().size());
         assertNotNull(foundMovie.getSimilarMovies());
         assertEquals(2, foundMovie.getSimilarMovies().size());
+    }
+
+    /**
+     * Tests saving a movie with minimal fields (only title and year).
+     */
+    @Test
+    void testSaveMovieWithMinimalFields() {
+        Movie minimalMovie = new Movie("Minimal", "2022", null, null);
+        Movie saved = movieRepository.save(minimalMovie);
+        assertNotNull(saved.getId());
+        assertEquals("Minimal", saved.getTitle());
+        assertEquals("2022", saved.getReleaseYear());
+    }
+
+    /**
+     * Tests saving a movie with null/empty optional fields.
+     */
+    @Test
+    void testSaveMovieWithNullOptionalFields() {
+        Movie movie = new Movie("NullFields", "2023", null, null);
+        movie.setPlot(null);
+        movie.setImdbRating(null);
+        movie.setImagePaths(null);
+        movie.setSimilarMovies(null);
+        Movie saved = movieRepository.save(movie);
+        assertNotNull(saved.getId());
+        assertEquals("NullFields", saved.getTitle());
+        assertNull(saved.getPlot());
+        assertNull(saved.getImdbRating());
+        assertNull(saved.getImagePaths());
+        assertNull(saved.getSimilarMovies());
     }
 }

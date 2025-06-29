@@ -11,49 +11,60 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Service for fetching movie data from the OMDb API.
+ * Handles HTTP requests and JSON parsing for OMDb responses.
+ */
 @Service
 public class OMDbService {
-    
-    // This gets the API key from application.properties
+
+    /** OMDb API key loaded from application properties. */
     @Value("${omdb.api.key}")
     private String apiKey;
-    
+
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
-    
+
     public OMDbService() {
-        // Create an HTTP client to make requests
         this.httpClient = HttpClient.newHttpClient();
-        // Create a JSON parser to convert responses to objects
         this.objectMapper = new ObjectMapper();
     }
-    
+
+    /**
+     * Fetches movie data from OMDb API asynchronously.
+     *
+     * @param title The movie title to search for
+     * @return CompletableFuture with OMDbResponse data
+     * @throws RuntimeException if the response cannot be parsed
+     */
     public CompletableFuture<OMDbResponse> getMovieData(String title) {
-        // Build the URL with the movie title and API key
-        // Replace spaces with + signs for URL encoding
-        String url = String.format("https://www.omdbapi.com/?t=%s&apikey=%s", 
-                                 title.replace(" ", "+"), apiKey);
-        
-        // Create the HTTP request
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .GET()
-                .build();
-        
-        // Send the request asynchronously and process the response
+        String url = buildOmdbUrl(title);
+        HttpRequest request = buildHttpRequest(url);
+
         return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> {
                     try {
-                        // Debug: Print the actual response
                         System.out.println("OMDb Response: " + response.body());
-                        // Convert the JSON response to an OMDbResponse object
                         return objectMapper.readValue(response.body(), OMDbResponse.class);
                     } catch (IOException e) {
-                        // error logging
                         System.out.println("Parsing error: " + e.getMessage());
                         System.out.println("Response body: " + response.body());
                         throw new RuntimeException("Failed to parse OMDb response: " + e.getMessage(), e);
                     }
                 });
+    }
+
+    /** Builds the OMDb API URL for the given title. */
+    private String buildOmdbUrl(String title) {
+        return String.format("https://www.omdbapi.com/?t=%s&apikey=%s",
+                title.replace(" ", "+"), apiKey);
+    }
+
+    /** Builds an HTTP GET request for the given URL. */
+    private HttpRequest buildHttpRequest(String url) {
+        return HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .build();
     }
 }
