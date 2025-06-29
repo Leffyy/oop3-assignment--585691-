@@ -1,4 +1,4 @@
-# Ignore all Java class files
+# Java class files
 *.class
 
 # Maven target directory
@@ -26,5 +26,5 @@ Thumbs.db
 # H2 database files (if used outside in-memory)
 *.h2.db
 
-# Movie images (generated at runtime)
+# Movie images (if generated and not source assets)
 movie-images/
