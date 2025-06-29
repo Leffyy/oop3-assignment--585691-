@@ -19,7 +19,7 @@
  *   <li>PATCH /api/movies/{id}/watched - Update watched status</li>
  *   <li>DELETE /api/movies/{id} - Remove movie from watchlist</li>
  * </ul>
- * 
+ *  he
  * @since 1.0
  * @author Movie Watchlist Team
  */

@@ -85,10 +85,11 @@ public class MovieService {
      */
     public CompletableFuture<Movie> addMovieByTitle(String title) {
         if (title == null || title.trim().isEmpty()) {
-            return CompletableFuture.failedFuture(
-                new IllegalArgumentException("Movie title is required")
-            );
+            CompletableFuture<Movie> failed = new CompletableFuture<>();
+            failed.completeExceptionally(new IllegalArgumentException("Title cannot be empty"));
+            return failed;
         }
+
         return addMovieToWatchlist(title.trim());
     }
 
