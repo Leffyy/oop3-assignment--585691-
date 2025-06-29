@@ -1,9 +1,8 @@
-package com.example.moviewatchlist;
+package com.example.moviewatchlist.service;
 
 import com.example.moviewatchlist.dto.TMDbSearchResponse;
 import com.example.moviewatchlist.dto.TMDbImagesResponse;
 import com.example.moviewatchlist.dto.TMDbSimilarResponse;
-import com.example.moviewatchlist.service.TMDbService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,12 +1,9 @@
-package com.example.moviewatchlist;
+package com.example.moviewatchlist.service;
 
 import com.example.moviewatchlist.dto.*;
 import com.example.moviewatchlist.model.Movie;
 import com.example.moviewatchlist.repository.MovieRepository;
-import com.example.moviewatchlist.service.ImageDownloadService;
-import com.example.moviewatchlist.service.MovieService;
-import com.example.moviewatchlist.service.OMDbService;
-import com.example.moviewatchlist.service.TMDbService;
+
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
