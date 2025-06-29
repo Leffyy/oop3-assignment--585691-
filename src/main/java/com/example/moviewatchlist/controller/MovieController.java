@@ -49,8 +49,7 @@ public class MovieController {
     @PostMapping
     public CompletableFuture<ResponseEntity<?>> addMovie(@RequestBody Map<String, String> request) {
         String title = request.get("title");
-        if (title == null) {
-            // Immediately return a failed future for missing title
+        if (title == null || title.trim().isEmpty()) {
             CompletableFuture<ResponseEntity<?>> failed = new CompletableFuture<>();
             failed.complete(ResponseEntity.badRequest().body(Map.of("error", "Movie title is required")));
             return failed;
