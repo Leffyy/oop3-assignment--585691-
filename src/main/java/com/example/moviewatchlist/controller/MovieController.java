@@ -55,8 +55,12 @@ public class MovieController {
     }
 
     private ResponseEntity<?> handleAddMovieException(Throwable ex) {
-        String errorMessage = ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
-        return ResponseEntity.badRequest().body(Map.of("error", errorMessage));
+        Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+        if (cause instanceof IllegalArgumentException) {
+            return ResponseEntity.badRequest().body(Map.of("error", cause.getMessage()));
+        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", cause.getMessage()));
     }
 
     /**
