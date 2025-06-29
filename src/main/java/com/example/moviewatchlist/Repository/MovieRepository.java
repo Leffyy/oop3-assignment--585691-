@@ -7,14 +7,28 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.lang.NonNull;
 
-// This interface handles all database operations for movies
+/**
+ * Repository interface for Movie entities.
+ * Handles all database operations for movies, including pagination and existence checks.
+ */
 @Repository
 public interface MovieRepository extends JpaRepository<Movie, Long> {
-    
-    // Gets movies in pages (for pagination) - can't be null
+
+    /**
+     * Retrieves a paginated list of movies.
+     *
+     * @param pageable pagination information
+     * @return a page of movies
+     */
     @NonNull
     Page<Movie> findAll(@NonNull Pageable pageable);
-    
-    // Checks if a movie with the same title and year already exists
+
+    /**
+     * Checks if a movie with the given title and release year already exists.
+     *
+     * @param title the movie title
+     * @param year the release year
+     * @return true if a movie with the same title and year exists, false otherwise
+     */
     boolean existsByTitleAndReleaseYear(String title, String year);
-}
+}       
