@@ -101,6 +101,10 @@ public class MovieService {
      * @throws RuntimeException if movie not found or already exists
      */
     public CompletableFuture<Movie> addMovieToWatchlist(String title) {
+        if (title == null || title.trim().isEmpty()) {
+            throw new IllegalArgumentException("Title cannot be null or blank");
+        }
+
         return omdbService.getMovieData(title)
                 .thenCompose(omdbResponse -> handleOmdbResponse(omdbResponse, title));
     }
