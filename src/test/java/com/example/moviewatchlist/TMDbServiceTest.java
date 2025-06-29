@@ -20,6 +20,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for TMDbService.
+ * Uses Mockito to mock HTTP client behavior and verify TMDb API integration logic.
+ */
 @SuppressWarnings("unchecked")
 @ExtendWith(MockitoExtension.class)
 public class TMDbServiceTest {
@@ -39,9 +43,11 @@ public class TMDbServiceTest {
         ReflectionTestUtils.setField(tmdbService, "apiKey", "test-tmdb-key");
     }
 
+    /**
+     * Tests successful search for a movie using TMDb API.
+     */
     @Test
     void testSearchMovie_Success() throws Exception {
-        // Given
         String movieTitle = "Inception";
         String jsonResponse = """
             {
@@ -62,11 +68,9 @@ public class TMDbServiceTest {
         when(mockHttpClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
             .thenReturn(CompletableFuture.<HttpResponse<String>>completedFuture(mockResponse));
 
-        // When
         CompletableFuture<TMDbSearchResponse> future = tmdbService.searchMovie(movieTitle);
         TMDbSearchResponse result = future.join();
 
-        // Then
         assertNotNull(result);
         assertNotNull(result.getResults());
         assertEquals(1, result.getResults().size());
@@ -78,9 +82,11 @@ public class TMDbServiceTest {
         assertEquals(8.367, movie.getVoteAverage());
     }
 
+    /**
+     * Tests TMDbService searchMovie when no results are found.
+     */
     @Test
     void testSearchMovie_NoResults() throws Exception {
-        // Given
         String movieTitle = "NonexistentMovie";
         String jsonResponse = """
             {
@@ -92,19 +98,19 @@ public class TMDbServiceTest {
         when(mockHttpClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
             .thenReturn(CompletableFuture.<HttpResponse<String>>completedFuture(mockResponse));
 
-        // When
         CompletableFuture<TMDbSearchResponse> future = tmdbService.searchMovie(movieTitle);
         TMDbSearchResponse result = future.join();
 
-        // Then
         assertNotNull(result);
         assertNotNull(result.getResults());
         assertTrue(result.getResults().isEmpty());
     }
 
+    /**
+     * Tests successful retrieval of movie images from TMDb API.
+     */
     @Test
     void testGetMovieImages_Success() throws Exception {
-        // Given
         Integer movieId = 27205;
         String jsonResponse = """
             {
@@ -131,11 +137,9 @@ public class TMDbServiceTest {
         when(mockHttpClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
             .thenReturn(CompletableFuture.<HttpResponse<String>>completedFuture(mockResponse));
 
-        // When
         CompletableFuture<TMDbImagesResponse> future = tmdbService.getMovieImages(movieId);
         TMDbImagesResponse result = future.join();
 
-        // Then
         assertNotNull(result);
         assertNotNull(result.getBackdrops());
         assertNotNull(result.getPosters());
@@ -144,9 +148,11 @@ public class TMDbServiceTest {
         assertEquals("/poster1.jpg", result.getPosters().get(0).getFile_path());
     }
 
+    /**
+     * Tests successful retrieval of similar movies from TMDb API.
+     */
     @Test
     void testGetSimilarMovies_Success() throws Exception {
-        // Given
         Integer movieId = 27205;
         String jsonResponse = """
             {
@@ -167,11 +173,9 @@ public class TMDbServiceTest {
         when(mockHttpClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
             .thenReturn(CompletableFuture.<HttpResponse<String>>completedFuture(mockResponse));
 
-        // When
         CompletableFuture<TMDbSimilarResponse> future = tmdbService.getSimilarMovies(movieId);
         TMDbSimilarResponse result = future.join();
 
-        // Then
         assertNotNull(result);
         assertNotNull(result.getResults());
         assertEquals(2, result.getResults().size());
@@ -179,6 +183,9 @@ public class TMDbServiceTest {
         assertEquals("Shutter Island", result.getResults().get(1).getTitle());
     }
 
+    /**
+     * Tests URL encoding of movie title in searchMovie method.
+     */
     @Test
     void testSearchMovie_UrlEncoding() throws Exception {
         // Given

@@ -28,6 +28,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for the MovieService class.
+ * Uses Mockito to mock dependencies and verify service logic.
+ */
 @ExtendWith(MockitoExtension.class)
 public class MovieServiceTest {
 
@@ -77,6 +81,9 @@ public class MovieServiceTest {
         tmdbSearchResponse.setResults(Arrays.asList(tmdbMovie));
     }
 
+    /**
+     * Tests adding a movie to the watchlist when all external calls succeed.
+     */
     @Test
     void testAddMovieToWatchlist_Success() {
         // Given

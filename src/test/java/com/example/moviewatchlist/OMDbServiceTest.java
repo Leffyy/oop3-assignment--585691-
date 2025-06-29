@@ -18,6 +18,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for OMDbService.
+ * Uses Mockito to mock HTTP client behavior and verify OMDb API integration logic.
+ */
 @SuppressWarnings("unchecked")
 @ExtendWith(MockitoExtension.class)
 public class OMDbServiceTest {
@@ -33,14 +37,16 @@ public class OMDbServiceTest {
     @BeforeEach
     void setUp() {
         omdbService = new OMDbService();
-        // Use reflection to inject the mock HttpClient
+        // Use reflection to inject the mock HttpClient and API key
         ReflectionTestUtils.setField(omdbService, "httpClient", mockHttpClient);
         ReflectionTestUtils.setField(omdbService, "apiKey", "test-api-key");
     }
 
+    /**
+     * Tests successful retrieval and parsing of movie data from OMDb.
+     */
     @Test
     void testGetMovieData_Success() throws Exception {
-        // Given
         String movieTitle = "Inception";
         String jsonResponse = """
             {
@@ -62,11 +68,9 @@ public class OMDbServiceTest {
             ))
             .thenReturn(CompletableFuture.<HttpResponse<String>>completedFuture(mockResponse));
 
-        // When
         CompletableFuture<OMDbResponse> future = omdbService.getMovieData(movieTitle);
         OMDbResponse result = future.join();
 
-        // Then
         assertNotNull(result);
         assertEquals("Inception", result.getTitle());
         assertEquals("2010", result.getYear());
@@ -75,9 +79,11 @@ public class OMDbServiceTest {
         assertEquals("True", result.getResponse());
     }
 
+    /**
+     * Tests OMDbService behavior when the movie is not found.
+     */
     @Test
     void testGetMovieData_MovieNotFound() throws Exception {
-        // Given
         String movieTitle = "NonexistentMovie";
         String jsonResponse = """
             {
@@ -93,20 +99,20 @@ public class OMDbServiceTest {
             ))
             .thenReturn(CompletableFuture.<HttpResponse<String>>completedFuture(mockResponse));
 
-        // When
         CompletableFuture<OMDbResponse> future = omdbService.getMovieData(movieTitle);
         OMDbResponse result = future.join();
 
-        // Then
         assertNotNull(result);
         assertEquals("False", result.getResponse());
         assertEquals("Movie not found!", result.getError());
         assertNull(result.getTitle());
     }
 
+    /**
+     * Tests OMDbService behavior when the response JSON is invalid.
+     */
     @Test
     void testGetMovieData_InvalidJson() throws Exception {
-        // Given
         String movieTitle = "Test Movie";
         String invalidJson = "{ invalid json }";
 
@@ -117,15 +123,16 @@ public class OMDbServiceTest {
             ))
             .thenReturn(CompletableFuture.<HttpResponse<String>>completedFuture(mockResponse));
 
-        // When & Then
         CompletableFuture<OMDbResponse> future = omdbService.getMovieData(movieTitle);
-        
+
         assertThrows(RuntimeException.class, () -> future.join());
     }
 
+    /**
+     * Tests that spaces in movie titles are correctly encoded as '+' in the OMDb API URL.
+     */
     @Test
     void testGetMovieData_UrlEncoding() throws Exception {
-        // Given
         String movieTitle = "The Lord of the Rings";
         String jsonResponse = """
             {
@@ -147,10 +154,8 @@ public class OMDbServiceTest {
                 return CompletableFuture.completedFuture(mockResponse);
             });
 
-        // When
         omdbService.getMovieData(movieTitle).join();
 
-        // Then
         verify(mockHttpClient).sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
     }
 }
