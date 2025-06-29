@@ -175,10 +175,11 @@ class ImageDownloadServiceTest {
         // Assert
         assertEquals(1, downloadedPaths.size());
         String downloadedPath = downloadedPaths.get(0);
-        assertFalse(downloadedPath.contains(":"));
-        assertFalse(downloadedPath.contains("/"));
-        assertFalse(downloadedPath.contains("?"));
-        assertTrue(downloadedPath.contains("Movie_"));
+        String fileName = Path.of(downloadedPath).getFileName().toString();
+        assertFalse(fileName.contains(":"));
+        assertFalse(fileName.contains("/"));
+        assertFalse(fileName.contains("?"));
+        assertTrue(fileName.contains("Movie_"));
     }
 
     /**

@@ -7,6 +7,8 @@ import com.example.moviewatchlist.service.MovieService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.async.DeferredResult;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -47,16 +49,27 @@ public class MovieController {
      * @return The created movie or error response
      */
     @PostMapping
-    public CompletableFuture<ResponseEntity<?>> addMovie(@RequestBody Map<String, String> request) {
+    public DeferredResult<ResponseEntity<?>> addMovie(@RequestBody Map<String, String> request) {
+        DeferredResult<ResponseEntity<?>> output = new DeferredResult<>();
         String title = request.get("title");
-        return movieService.addMovieByTitle(title)
-                .<ResponseEntity<?>>thenApply(movie -> ResponseEntity.status(HttpStatus.CREATED).body(new MovieResponse(movie)))
-                .exceptionally(ex -> handleAddMovieException(ex));
-    }
-
-    private ResponseEntity<?> handleAddMovieException(Throwable ex) {
-        String errorMessage = ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
-        return ResponseEntity.badRequest().body(Map.of("error", errorMessage));
+        if (title == null || title.trim().isEmpty()) {
+            output.setResult(ResponseEntity
+                .badRequest()
+                .header("Content-Type", "application/json")
+                .body(Map.of("error", "Movie title is required")));
+            return output;
+        }
+        movieService.addMovieByTitle(title)
+            .thenAccept(movie -> output.setResult(ResponseEntity.status(HttpStatus.CREATED).body(new MovieResponse(movie))))
+            .exceptionally(ex -> {
+                Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                output.setResult(ResponseEntity
+                    .badRequest()
+                    .header("Content-Type", "application/json")
+                    .body(Map.of("error", cause.getMessage())));
+                return null;
+            });
+        return output;
     }
 
     /**

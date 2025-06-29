@@ -70,8 +70,15 @@ public class ImageDownloadService {
         for (int i = 0; i < imagesToDownload; i++) {
             String imagePath = imagePaths.get(i);
             String imageUrl = "https://image.tmdb.org/t/p/w780" + imagePath;
-            String fileName = sanitizeFileName(movieTitle) + "_" + i + getFileExtension(imagePath);
-            String localPath = imagesPath + fileName;
+
+            // Sanitize movie title and image file name separately
+            String safeTitle = sanitizeFileName(movieTitle);
+            String imageName = i + getFileExtension(imagePath);
+            String safeImageName = sanitizeFileName(imageName);
+
+            String fileName = safeTitle + "_" + safeImageName;
+            // Use Paths.get to join directory and filename safely
+            String localPath = Paths.get(imagesPath, fileName).toString();
             downloadTasks.add(downloadImage(imageUrl, localPath));
         }
         return downloadTasks;
@@ -107,7 +114,18 @@ public class ImageDownloadService {
 
     /** Removes special characters from filename to avoid file system issues. */
     private String sanitizeFileName(String fileName) {
-        return fileName.replaceAll("[^a-zA-Z0-9.-]", "_");
+        // Replace all forbidden characters (\ / : * ? " < > |) with _
+        String sanitized = fileName.replaceAll("[\\\\/:*?\"<>|]", "_");
+        // Then replace anything not a-z, A-Z, 0-9, dash, underscore, dot with _
+        sanitized = sanitized.replaceAll("[^a-zA-Z0-9._-]", "_");
+        // Replace all dots except the last one with _
+        int lastDot = sanitized.lastIndexOf('.');
+        if (lastDot > 0) {
+            String name = sanitized.substring(0, lastDot).replace(".", "_");
+            String ext = sanitized.substring(lastDot);
+            return name + ext;
+        }
+        return sanitized;
     }
 
     /** Extracts file extension from image path, defaults to .jpg if none found. */

@@ -6,13 +6,13 @@ import com.example.moviewatchlist.service.MovieService;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.context.request.async.DeferredResult;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 /**
@@ -28,24 +28,24 @@ class MovieControllerUnitTest {
     void testAddMovieWithEmptyTitle() {
         // Arrange
         MovieService mockService = mock(MovieService.class);
-        when(mockService.addMovieByTitle(anyString()))
-            .thenReturn(CompletableFuture.failedFuture(
-                new IllegalArgumentException("Movie title is required")));
-        
         MovieController controller = new MovieController(mockService);
 
         // Act
         Map<String, String> request = new HashMap<>();
         request.put("title", "");
-        CompletableFuture<ResponseEntity<?>> responseFuture = controller.addMovie(request);
-        ResponseEntity<?> response = responseFuture.join();
+        DeferredResult<ResponseEntity<?>> result = controller.addMovie(request);
+        ResponseEntity<?> response = getResult(result);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         Object body = response.getBody();
         assertNotNull(body, "Response body should not be null");
-        assertTrue(body.toString().contains("Movie title is required"));
-        verify(mockService).addMovieByTitle("");
+        if (body instanceof Map<?, ?> map) {
+            assertTrue(map.get("error").toString().contains("Movie title is required"));
+        } else {
+            fail("Expected error response as a Map");
+        }
+        verifyNoInteractions(mockService);
     }
 
     /**
@@ -55,24 +55,24 @@ class MovieControllerUnitTest {
     void testAddMovieWithNullTitle() {
         // Arrange
         MovieService mockService = mock(MovieService.class);
-        when(mockService.addMovieByTitle(null))
-            .thenReturn(CompletableFuture.failedFuture(
-                new IllegalArgumentException("Movie title is required")));
-        
         MovieController controller = new MovieController(mockService);
 
         // Act
         Map<String, String> request = new HashMap<>();
         request.put("title", null);
-        CompletableFuture<ResponseEntity<?>> responseFuture = controller.addMovie(request);
-        ResponseEntity<?> response = responseFuture.join();
+        DeferredResult<ResponseEntity<?>> result = controller.addMovie(request);
+        ResponseEntity<?> response = getResult(result);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         Object body = response.getBody();
         assertNotNull(body, "Response body should not be null");
-        assertTrue(body.toString().contains("Movie title is required"));
-        verify(mockService).addMovieByTitle(null);
+        if (body instanceof Map<?, ?> map) {
+            assertTrue(map.get("error").toString().contains("Movie title is required"));
+        } else {
+            fail("Expected error response as a Map");
+        }
+        verifyNoInteractions(mockService);
     }
 
     /**
@@ -82,24 +82,24 @@ class MovieControllerUnitTest {
     void testAddMovieWithWhitespaceTitle() {
         // Arrange
         MovieService mockService = mock(MovieService.class);
-        when(mockService.addMovieByTitle("   "))
-            .thenReturn(CompletableFuture.failedFuture(
-                new IllegalArgumentException("Movie title is required")));
-        
         MovieController controller = new MovieController(mockService);
 
         // Act
         Map<String, String> request = new HashMap<>();
         request.put("title", "   ");
-        CompletableFuture<ResponseEntity<?>> responseFuture = controller.addMovie(request);
-        ResponseEntity<?> response = responseFuture.join();
+        DeferredResult<ResponseEntity<?>> result = controller.addMovie(request);
+        ResponseEntity<?> response = getResult(result);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         Object body = response.getBody();
         assertNotNull(body, "Response body should not be null");
-        assertTrue(body.toString().contains("Movie title is required"));
-        verify(mockService).addMovieByTitle("   ");
+        if (body instanceof Map<?, ?> map) {
+            assertTrue(map.get("error").toString().contains("Movie title is required"));
+        } else {
+            fail("Expected error response as a Map");
+        }
+        verifyNoInteractions(mockService);
     }
 
     /**
@@ -117,14 +117,18 @@ class MovieControllerUnitTest {
 
         // Act
         Map<String, String> request = new HashMap<>(); // No "title" key
-        CompletableFuture<ResponseEntity<?>> responseFuture = controller.addMovie(request);
-        ResponseEntity<?> response = responseFuture.join();
+        DeferredResult<ResponseEntity<?>> result = controller.addMovie(request);
+        ResponseEntity<?> response = getResult(result);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         Object body = response.getBody();
         assertNotNull(body, "Response body should not be null");
-        assertTrue(body.toString().contains("Movie title is required"));
+        if (body instanceof Map<?, ?> map) {
+            assertTrue(map.get("error").toString().contains("Movie title is required"));
+        } else {
+            fail("Expected error response as a Map");
+        }
     }
 
     /**
@@ -137,20 +141,26 @@ class MovieControllerUnitTest {
         when(mockService.addMovieByTitle("Inception"))
             .thenReturn(CompletableFuture.failedFuture(
                 new RuntimeException("Movie already exists")));
-        
+
         MovieController controller = new MovieController(mockService);
 
         // Act
         Map<String, String> request = new HashMap<>();
         request.put("title", "Inception");
-        CompletableFuture<ResponseEntity<?>> responseFuture = controller.addMovie(request);
-        ResponseEntity<?> response = responseFuture.join();
+        DeferredResult<ResponseEntity<?>> result = controller.addMovie(request);
+
+        // Wait for async result
+        ResponseEntity<?> response = getResult(result);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         Object body = response.getBody();
         assertNotNull(body, "Response body should not be null");
-        assertTrue(body.toString().contains("Movie already exists"));
+        if (body instanceof Map<?, ?> map) {
+            assertTrue(map.get("error").toString().contains("Movie already exists"));
+        } else {
+            fail("Expected error response as a Map");
+        }
         verify(mockService).addMovieByTitle("Inception");
     }
 
@@ -177,8 +187,10 @@ class MovieControllerUnitTest {
         // Act
         Map<String, String> request = new HashMap<>();
         request.put("title", "Inception");
-        CompletableFuture<ResponseEntity<?>> responseFuture = controller.addMovie(request);
-        ResponseEntity<?> response = responseFuture.join();
+        DeferredResult<ResponseEntity<?>> result = controller.addMovie(request);
+
+        // Wait for async result
+        ResponseEntity<?> response = getResult(result);
 
         // Assert
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -187,5 +199,16 @@ class MovieControllerUnitTest {
         assertTrue(body instanceof MovieResponse);
         assertEquals("Inception", ((MovieResponse) body).getTitle());
         verify(mockService).addMovieByTitle("Inception");
+    }
+
+    // Utility method to wait for DeferredResult (with timeout)
+    private ResponseEntity<?> getResult(DeferredResult<ResponseEntity<?>> result) {
+        for (int i = 0; i < 100; i++) {
+            Object value = result.getResult();
+            if (value != null) return (ResponseEntity<?>) value;
+            try { Thread.sleep(10); } catch (InterruptedException ignored) {}
+        }
+        fail("DeferredResult did not complete in time");
+        return null;
     }
 }

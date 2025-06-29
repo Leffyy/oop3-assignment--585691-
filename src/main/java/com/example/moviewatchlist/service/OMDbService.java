@@ -38,6 +38,12 @@ public class OMDbService {
      * @throws RuntimeException if the response cannot be parsed
      */
     public CompletableFuture<OMDbResponse> getMovieData(String title) {
+        if (title == null || title.trim().isEmpty()) {
+            CompletableFuture<OMDbResponse> failed = new CompletableFuture<>();
+            failed.completeExceptionally(new IllegalArgumentException("Title cannot be null or blank"));
+            return failed;
+        }
+
         String url = buildOmdbUrl(title);
         HttpRequest request = buildHttpRequest(url);
 

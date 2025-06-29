@@ -49,10 +49,16 @@ public class MovieControllerTest {
     @Test
     public void testAddMovieWithEmptyTitle() throws Exception {
         Map<String, String> request = Map.of("title", "");
-        mockMvc.perform(post("/api/movies")
+        var mvcResult = mockMvc.perform(post("/api/movies")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.error").value("Movie title is required"));
     }
 
     /**
@@ -61,10 +67,16 @@ public class MovieControllerTest {
     @Test
     public void testAddMovieWithWhitespaceTitle() throws Exception {
         Map<String, String> request = Map.of("title", "   ");
-        mockMvc.perform(post("/api/movies")
+        var mvcResult = mockMvc.perform(post("/api/movies")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.error").value("Movie title is required"));
     }
 
     /**
@@ -97,12 +109,18 @@ public class MovieControllerTest {
             .id(1L)
             .build();
 
-        when(movieService.addMovieToWatchlist(anyString()))
+        when(movieService.addMovieByTitle(anyString()))
             .thenReturn(CompletableFuture.completedFuture(mockMovie));
 
-        mockMvc.perform(post("/api/movies")
+        // Step 1: Perform the request and check async started
+        var mvcResult = mockMvc.perform(post("/api/movies")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // Step 2: Dispatch the async result and check the response
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Inception"));
     }
@@ -113,12 +131,18 @@ public class MovieControllerTest {
     @Test
     public void testAddMovieServiceThrowsException() throws Exception {
         Map<String, String> request = Map.of("title", "Inception");
-        when(movieService.addMovieToWatchlist(anyString()))
+        when(movieService.addMovieByTitle(anyString()))
             .thenReturn(CompletableFuture.failedFuture(new RuntimeException("Movie already exists")));
 
-        mockMvc.perform(post("/api/movies")
+        // Step 1: Perform the request and check async started
+        var mvcResult = mockMvc.perform(post("/api/movies")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // Step 2: Dispatch the async result and check the response
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Movie already exists")));
     }
