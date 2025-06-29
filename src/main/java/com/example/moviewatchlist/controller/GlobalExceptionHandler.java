@@ -6,28 +6,46 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import java.util.Map;
 
-// This class handles all exceptions that happen in the controllers
+/**
+ * Global exception handler for all controllers.
+ * Handles and formats exceptions into HTTP responses.
+ */
 @ControllerAdvice
 public class GlobalExceptionHandler {
-    
-    // Handles runtime exceptions (like null pointer errors)
-    // Returns a 500 error with the actual error message
+
+    /**
+     * Handles uncaught runtime exceptions.
+     * Returns a 500 Internal Server Error with the exception message.
+     *
+     * @param e the runtime exception
+     * @return a ResponseEntity with error details
+     */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<?> handleRuntimeException(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", e.getMessage()));
     }
-    
-   
-    // Returns a 400 bad request error with the error message
+
+    /**
+     * Handles illegal argument exceptions.
+     * Returns a 400 Bad Request with the exception message.
+     *
+     * @param e the illegal argument exception
+     * @return a ResponseEntity with error details
+     */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException e) {
         return ResponseEntity.badRequest()
                 .body(Map.of("error", e.getMessage()));
     }
-    
-    // Catches any other exception w
-    // Returns a generic 500 error without exposing internal details
+
+    /**
+     * Handles all other exceptions.
+     * Returns a generic 500 Internal Server Error without exposing details.
+     *
+     * @param e the exception
+     * @return a ResponseEntity with a generic error message
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGenericException(Exception e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

@@ -47,17 +47,23 @@ public class MovieController {
     @PostMapping
     public CompletableFuture<ResponseEntity<?>> addMovie(@RequestBody Map<String, String> request) {
         String title = request.get("title");
-        if (title == null || title.trim().isEmpty()) {
+        if (!isValidTitle(title)) {
             return CompletableFuture.completedFuture(
-                    ResponseEntity.badRequest().body(Map.of("error", "Movie title is required"))
+                ResponseEntity.badRequest().body(Map.of("error", "Movie title is required"))
             );
         }
         return movieService.addMovieByTitle(title)
                 .<ResponseEntity<?>>thenApply(movie -> ResponseEntity.status(HttpStatus.CREATED).body(new MovieResponse(movie)))
-                .exceptionally(ex -> {
-                    String errorMessage = ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
-                    return ResponseEntity.badRequest().body(Map.of("error", errorMessage));
-                });
+                .exceptionally(ex -> handleAddMovieException(ex));
+    }
+
+    private boolean isValidTitle(String title) {
+        return title != null && !title.trim().isEmpty();
+    }
+
+    private ResponseEntity<?> handleAddMovieException(Throwable ex) {
+        String errorMessage = ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
+        return ResponseEntity.badRequest().body(Map.of("error", errorMessage));
     }
 
     /**
