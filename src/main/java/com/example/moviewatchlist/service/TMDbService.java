@@ -13,36 +13,36 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Service for interacting with The Movie Database (TMDb) API.
+ * Handles searching for movies, fetching images, and retrieving similar movies.
+ */
 @Service
 public class TMDbService {
-    
-    // Gets the API key from application.properties
+
+    /** TMDb API key loaded from application properties. */
     @Value("${tmdb.api.key}")
     private String apiKey;
-    
+
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
-    
+
     public TMDbService() {
-        // Set up HTTP client for making API calls
         this.httpClient = HttpClient.newHttpClient();
-        // Set up JSON parser to convert responses into Java objects
         this.objectMapper = new ObjectMapper();
     }
-    
-    // Search for movies by title on TMDb
+
+    /**
+     * Searches for movies by title on TMDb.
+     *
+     * @param title The movie title to search for
+     * @return CompletableFuture with TMDbSearchResponse
+     */
     public CompletableFuture<TMDbSearchResponse> searchMovie(String title) {
-        // Build the search URL with API key and movie title
-        String url = String.format("https://api.themoviedb.org/3/search/movie?api_key=%s&query=%s", 
-                                 apiKey, title.replace(" ", "%20"));
-        
-        // Create the HTTP request
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .GET()
-                .build();
-        
-        // Send request asynchronously and parse the JSON response
+        String url = String.format("https://api.themoviedb.org/3/search/movie?api_key=%s&query=%s",
+                apiKey, title.replace(" ", "%20"));
+        HttpRequest request = buildHttpRequest(url);
+
         return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> {
                     try {
@@ -52,19 +52,18 @@ public class TMDbService {
                     }
                 });
     }
-    
-    // Get movie poster and backdrop images from TMDb
+
+    /**
+     * Gets movie poster and backdrop images from TMDb.
+     *
+     * @param movieId The TMDb movie ID
+     * @return CompletableFuture with TMDbImagesResponse
+     */
     public CompletableFuture<TMDbImagesResponse> getMovieImages(Integer movieId) {
-        // Build the images URL with the movie ID
-        String url = String.format("https://api.themoviedb.org/3/movie/%d/images?api_key=%s", 
-                                 movieId, apiKey);
-        
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .GET()
-                .build();
-        
-        // Send request and convert response to Java object
+        String url = String.format("https://api.themoviedb.org/3/movie/%d/images?api_key=%s",
+                movieId, apiKey);
+        HttpRequest request = buildHttpRequest(url);
+
         return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> {
                     try {
@@ -74,19 +73,18 @@ public class TMDbService {
                     }
                 });
     }
-    
-    // Get movies similar to the given movie ID
+
+    /**
+     * Gets movies similar to the given movie ID from TMDb.
+     *
+     * @param movieId The TMDb movie ID
+     * @return CompletableFuture with TMDbSimilarResponse
+     */
     public CompletableFuture<TMDbSimilarResponse> getSimilarMovies(Integer movieId) {
-        // Build the similar movies URL
-        String url = String.format("https://api.themoviedb.org/3/movie/%d/similar?api_key=%s", 
-                                 movieId, apiKey);
-        
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .GET()
-                .build();
-        
-        // Get similar movies and parse the response
+        String url = String.format("https://api.themoviedb.org/3/movie/%d/similar?api_key=%s",
+                movieId, apiKey);
+        HttpRequest request = buildHttpRequest(url);
+
         return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> {
                     try {
@@ -95,5 +93,13 @@ public class TMDbService {
                         throw new RuntimeException("Failed to parse TMDb similar movies response", e);
                     }
                 });
+    }
+
+    /** Builds an HTTP GET request for the given URL. */
+    private HttpRequest buildHttpRequest(String url) {
+        return HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .build();
     }
 }
