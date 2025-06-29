@@ -53,15 +53,20 @@ public class MovieController {
         DeferredResult<ResponseEntity<?>> output = new DeferredResult<>();
         String title = request.get("title");
         if (title == null || title.trim().isEmpty()) {
-            output.setResult(ResponseEntity.badRequest().body(Map.of("error", "Title must not be empty")));
+            output.setResult(ResponseEntity
+                .badRequest()
+                .header("Content-Type", "application/json")
+                .body(Map.of("error", "Movie title is required")));
             return output;
         }
         movieService.addMovieByTitle(title)
             .thenAccept(movie -> output.setResult(ResponseEntity.status(HttpStatus.CREATED).body(new MovieResponse(movie))))
             .exceptionally(ex -> {
                 Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-                // Treat all exceptions as Bad Request to match test expectations
-                output.setResult(ResponseEntity.badRequest().body(Map.of("error", cause.getMessage())));
+                output.setResult(ResponseEntity
+                    .badRequest()
+                    .header("Content-Type", "application/json")
+                    .body(Map.of("error", cause.getMessage())));
                 return null;
             });
         return output;

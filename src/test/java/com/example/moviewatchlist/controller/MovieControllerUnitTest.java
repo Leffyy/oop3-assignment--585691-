@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 /**
@@ -29,10 +28,6 @@ class MovieControllerUnitTest {
     void testAddMovieWithEmptyTitle() {
         // Arrange
         MovieService mockService = mock(MovieService.class);
-        when(mockService.addMovieByTitle(anyString()))
-            .thenReturn(CompletableFuture.failedFuture(
-                new IllegalArgumentException("Movie title is required")));
-        
         MovieController controller = new MovieController(mockService);
 
         // Act
@@ -50,7 +45,7 @@ class MovieControllerUnitTest {
         } else {
             fail("Expected error response as a Map");
         }
-        verify(mockService).addMovieByTitle("");
+        verifyNoInteractions(mockService);
     }
 
     /**
@@ -60,10 +55,6 @@ class MovieControllerUnitTest {
     void testAddMovieWithNullTitle() {
         // Arrange
         MovieService mockService = mock(MovieService.class);
-        when(mockService.addMovieByTitle(null))
-            .thenReturn(CompletableFuture.failedFuture(
-                new IllegalArgumentException("Movie title is required")));
-        
         MovieController controller = new MovieController(mockService);
 
         // Act
@@ -81,7 +72,7 @@ class MovieControllerUnitTest {
         } else {
             fail("Expected error response as a Map");
         }
-        verify(mockService).addMovieByTitle(null);
+        verifyNoInteractions(mockService);
     }
 
     /**
@@ -91,10 +82,6 @@ class MovieControllerUnitTest {
     void testAddMovieWithWhitespaceTitle() {
         // Arrange
         MovieService mockService = mock(MovieService.class);
-        when(mockService.addMovieByTitle("   "))
-            .thenReturn(CompletableFuture.failedFuture(
-                new IllegalArgumentException("Movie title is required")));
-        
         MovieController controller = new MovieController(mockService);
 
         // Act
@@ -112,7 +99,7 @@ class MovieControllerUnitTest {
         } else {
             fail("Expected error response as a Map");
         }
-        verify(mockService).addMovieByTitle("   ");
+        verifyNoInteractions(mockService);
     }
 
     /**
