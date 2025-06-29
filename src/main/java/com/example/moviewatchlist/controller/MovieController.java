@@ -4,7 +4,6 @@ import com.example.moviewatchlist.dto.MovieResponse;
 import com.example.moviewatchlist.dto.PaginatedResponse;
 import com.example.moviewatchlist.model.Movie;
 import com.example.moviewatchlist.service.MovieService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
