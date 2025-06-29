@@ -40,8 +40,8 @@ DELETE /api/movies/{id} - Delete movie
 <!-- requirements: -->
 
 Configure API Keys
-set OMDB_API_KEY=your_omdb_key_here
-set TMDB_API_KEY=your_tmdb_key_here
+-**OMDb key**: set OMDB_API_KEY=your_omdb_key_here
+-**TMBb key**: set TMDB_API_KEY=your_tmdb_key_here
 
 <!-- Database access: -->
 
