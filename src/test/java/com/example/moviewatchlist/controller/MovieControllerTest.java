@@ -89,8 +89,13 @@ public class MovieControllerTest {
     @Test
     public void testAddMovieSuccess() throws Exception {
         Map<String, String> request = Map.of("title", "Inception");
-        Movie mockMovie = new Movie("Inception", "2010", "Christopher Nolan", "Sci-Fi");
-        mockMovie.setId(1L);
+        Movie mockMovie = Movie.builder()
+            .title("Inception")
+            .releaseYear("2010")
+            .director("Christopher Nolan")
+            .genre("Sci-Fi")
+            .id(1L)
+            .build();
 
         when(movieService.addMovieToWatchlist(anyString()))
             .thenReturn(CompletableFuture.completedFuture(mockMovie));

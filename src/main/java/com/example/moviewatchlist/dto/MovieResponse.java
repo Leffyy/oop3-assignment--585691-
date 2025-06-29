@@ -57,7 +57,7 @@ public class MovieResponse {
         this.voteAverage = movie.getVoteAverage();
         this.imagePaths = movie.getImagePaths();
         this.similarMovies = movie.getSimilarMovies();
-        this.watched = movie.isWatched();
+        this.watched = Boolean.TRUE.equals(movie.getWatched());
         this.rating = movie.getRating();
     }
 

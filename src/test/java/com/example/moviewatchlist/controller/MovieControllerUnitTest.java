@@ -161,8 +161,13 @@ class MovieControllerUnitTest {
     void testAddMovieSuccess() {
         // Arrange
         MovieService mockService = mock(MovieService.class);
-        Movie mockMovie = new Movie("Inception", "2010", "Christopher Nolan", "Sci-Fi");
-        mockMovie.setId(1L);
+        Movie mockMovie = Movie.builder()
+            .title("Inception")
+            .releaseYear("2010")
+            .director("Christopher Nolan")
+            .genre("Sci-Fi")
+            .id(1L)
+            .build();
 
         when(mockService.addMovieByTitle("Inception"))
             .thenReturn(CompletableFuture.completedFuture(mockMovie));

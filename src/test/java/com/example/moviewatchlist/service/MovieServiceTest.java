@@ -4,7 +4,6 @@ import com.example.moviewatchlist.dto.*;
 import com.example.moviewatchlist.model.Movie;
 import com.example.moviewatchlist.repository.MovieRepository;
 
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -53,9 +52,14 @@ public class MovieServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Setup test data
-        testMovie = new Movie("Inception", "2010", "Christopher Nolan", "Sci-Fi");
-        testMovie.setId(1L);
+        // Setup test data using builder
+        testMovie = Movie.builder()
+            .title("Inception")
+            .releaseYear("2010")
+            .director("Christopher Nolan")
+            .genre("Sci-Fi")
+            .id(1L)
+            .build();
         testMovie.setPlot("A thief who enters dreams");
         testMovie.setImdbRating("8.8");
         
@@ -175,7 +179,7 @@ public class MovieServiceTest {
 
         // Then
         assertTrue(result.isPresent());
-        assertTrue(result.get().isWatched());
+        assertTrue(Boolean.TRUE.equals(result.get().getWatched()));
         verify(movieRepository).save(testMovie);
     }
 

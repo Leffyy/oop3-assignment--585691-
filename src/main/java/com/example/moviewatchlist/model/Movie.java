@@ -116,7 +116,7 @@ public class Movie {
      * Defaults to false.
      */
     @Builder.Default
-    private boolean watched = false;
+    private Boolean watched = false;
 
     /**
      * User's personal rating for the movie.
@@ -125,22 +125,6 @@ public class Movie {
     @Column(nullable = true)
     private Integer rating;
 
-    /**
-     * Constructor for creating a movie with basic information.
-     * 
-     * @param title The movie title
-     * @param releaseYear The release year
-     * @param director The director's name
-     * @param genre The movie genre(s)
-     */
-    public Movie(String title, String releaseYear, String director, String genre) {
-        this.title = title;
-        this.releaseYear = releaseYear;
-        this.director = director;
-        this.genre = genre;
-        this.watched = false;
-    }
-    
     /**
      * Gets the release year (alias for getReleaseYear).
      * @return the release year
