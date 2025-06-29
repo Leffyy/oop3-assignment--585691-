@@ -21,8 +21,12 @@ import java.util.concurrent.CompletableFuture;
 @CrossOrigin(origins = "*")
 public class MovieController {
 
-    @Autowired
-    private MovieService movieService;
+    private final MovieService movieService;
+
+    // Add this constructor for unit testing
+    public MovieController(MovieService movieService) {
+        this.movieService = movieService;
+    }
 
     /**
      * Search for movies using TMDb API.

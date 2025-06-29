@@ -1,4 +1,4 @@
-package com.example.moviewatchlist;
+package com.example.moviewatchlist.controller;
 
 import com.example.moviewatchlist.service.MovieService;
 import com.example.moviewatchlist.dto.MovieResponse;
