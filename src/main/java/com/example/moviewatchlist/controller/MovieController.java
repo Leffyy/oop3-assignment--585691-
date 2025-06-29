@@ -22,7 +22,6 @@ public class MovieController {
 
     private final MovieService movieService;
 
-    // Add this constructor for unit testing
     public MovieController(MovieService movieService) {
         this.movieService = movieService;
     }
@@ -36,7 +35,7 @@ public class MovieController {
     @GetMapping("/search")
     public CompletableFuture<ResponseEntity<?>> searchMovies(@RequestParam String query) {
         return movieService.searchMovies(query)
-                .<ResponseEntity<?>>thenApply(results -> ResponseEntity.ok(results))
+                .<ResponseEntity<?>>thenApply(ResponseEntity::ok)
                 .exceptionally(ex -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(Map.of("error", ex.getMessage())));
     }
@@ -50,18 +49,9 @@ public class MovieController {
     @PostMapping
     public CompletableFuture<ResponseEntity<?>> addMovie(@RequestBody Map<String, String> request) {
         String title = request.get("title");
-        if (!isValidTitle(title)) {
-            return CompletableFuture.completedFuture(
-                ResponseEntity.badRequest().body(Map.of("error", "Movie title is required"))
-            );
-        }
         return movieService.addMovieByTitle(title)
                 .<ResponseEntity<?>>thenApply(movie -> ResponseEntity.status(HttpStatus.CREATED).body(new MovieResponse(movie)))
                 .exceptionally(ex -> handleAddMovieException(ex));
-    }
-
-    private boolean isValidTitle(String title) {
-        return title != null && !title.trim().isEmpty();
     }
 
     private ResponseEntity<?> handleAddMovieException(Throwable ex) {
@@ -111,9 +101,6 @@ public class MovieController {
             @RequestBody Map<String, Boolean> request) {
 
         Boolean watched = request.get("watched");
-        if (watched == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Watched status is required"));
-        }
         try {
             Optional<Movie> updatedMovie = movieService.updateWatchedStatus(id, watched);
             return updatedMovie.map(movie -> ResponseEntity.ok(new MovieResponse(movie)))
@@ -136,9 +123,6 @@ public class MovieController {
             @RequestBody Map<String, Integer> request) {
 
         Integer rating = request.get("rating");
-        if (rating == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Rating is required"));
-        }
         try {
             Optional<Movie> updatedMovie = movieService.updateRating(id, rating);
             return updatedMovie.map(movie -> ResponseEntity.ok(new MovieResponse(movie)))
