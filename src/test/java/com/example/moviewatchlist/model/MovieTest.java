@@ -110,6 +110,33 @@ class MovieTest {
     }
 
     @Test
+    void testEqualsAndHashCodeAllBranches() {
+        Movie m1 = Movie.builder().id(1L).title("A").build();
+        Movie m2 = Movie.builder().id(1L).title("A").build();
+        Movie m3 = Movie.builder().id(2L).title("B").build();
+
+        // Reflexive
+        assertEquals(m1, m1);
+
+        // Symmetric and transitive
+        assertEquals(m1, m2);
+        assertEquals(m2, m1);
+
+        // Not equal to null
+        assertNotEquals(m1, null);
+
+        // Not equal to different type
+        assertNotEquals(m1, "not a movie");
+
+        // Not equal if id or title differ
+        assertNotEquals(m1, m3);
+
+        // Hash codes
+        assertEquals(m1.hashCode(), m2.hashCode());
+        assertNotEquals(m1.hashCode(), m3.hashCode());
+    }
+
+    @Test
     void testToString() {
         Movie movie = Movie.builder()
                 .id(1L)
@@ -124,5 +151,42 @@ class MovieTest {
         assertTrue(str.contains("releaseYear=2020") || str.contains("releaseYear"));
         assertTrue(str.contains("watched=true"));
         assertTrue(str.contains("rating=5"));
+    }
+
+    @Test
+    void testToBuilder() {
+        Movie m1 = Movie.builder().id(1L).title("A").build();
+        Movie m2 = m1.toBuilder().title("B").build();
+        assertEquals(1L, m2.getId());
+        assertEquals("B", m2.getTitle());
+    }
+
+    @Test
+    void testGetReleaseYear() {
+        Movie movie = Movie.builder().releaseYear("2022").build();
+        assertEquals("2022", movie.getReleaseYear());
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    void testDeprecatedSetYear() {
+        Movie movie = new Movie();
+        movie.setYear("1999");
+        assertEquals("1999", movie.getReleaseYear());
+    }
+
+    @SuppressWarnings("deprecation")
+    @Test
+    void testDeprecatedGetYear() {
+        Movie movie = new Movie();
+        movie.setReleaseYear("2005");
+        assertEquals("2005", movie.getYear());
+    }
+
+    @Test
+    void testBuilderDefaults() {
+        Movie movie = Movie.builder().build();
+        assertFalse(movie.getWatched()); // default is false
+        assertNull(movie.getRating());   // default is null
     }
 }

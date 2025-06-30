@@ -16,7 +16,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @EqualsAndHashCode(of = {"id", "title"})
 @ToString(of = {"id", "title", "releaseYear", "watched", "rating"})
 public class Movie {
