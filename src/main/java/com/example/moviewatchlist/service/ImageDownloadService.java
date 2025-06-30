@@ -68,20 +68,19 @@ public class ImageDownloadService {
         int imagesToDownload = Math.min(imagePaths.size(), 3);
 
         for (int i = 0; i < imagesToDownload; i++) {
-            String imagePath = imagePaths.get(i);
-            String imageUrl = "https://image.tmdb.org/t/p/w780" + imagePath;
-
-            // Sanitize movie title and image file name separately
-            String safeTitle = sanitizeFileName(movieTitle);
-            String imageName = i + getFileExtension(imagePath);
-            String safeImageName = sanitizeFileName(imageName);
-
-            String fileName = safeTitle + "_" + safeImageName;
-            // Use Paths.get to join directory and filename safely
-            String localPath = Paths.get(imagesPath, fileName).toString();
-            downloadTasks.add(downloadImage(imageUrl, localPath));
+            downloadTasks.add(createDownloadTask(imagePaths.get(i), movieTitle, i));
         }
         return downloadTasks;
+    }
+
+    private CompletableFuture<String> createDownloadTask(String imagePath, String movieTitle, int index) {
+        String imageUrl = "https://image.tmdb.org/t/p/w780" + imagePath;
+        String safeTitle = sanitizeFileName(movieTitle);
+        String imageName = index + getFileExtension(imagePath);
+        String safeImageName = sanitizeFileName(imageName);
+        String fileName = safeTitle + "_" + safeImageName;
+        String localPath = Paths.get(imagesPath, fileName).toString();
+        return downloadImage(imageUrl, localPath);
     }
 
     /**

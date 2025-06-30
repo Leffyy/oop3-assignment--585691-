@@ -98,20 +98,26 @@ public class MovieService {
      * @return CompletableFuture containing the saved movie
      */
     public CompletableFuture<Movie> addMovieToWatchlist(String title) {
-        if (title == null || title.trim().isEmpty()) {
-            CompletableFuture<Movie> failed = new CompletableFuture<>();
-            failed.completeExceptionally(new IllegalArgumentException("Title cannot be null or blank"));
-            return failed;
+        if (isBlank(title)) {
+            return failedFuture(new IllegalArgumentException("Title cannot be null or blank"));
         }
 
         CompletableFuture<OMDbResponse> omdbFuture = omdbService.getMovieData(title);
         if (omdbFuture == null) {
-            CompletableFuture<Movie> failed = new CompletableFuture<>();
-            failed.completeExceptionally(new NullPointerException("OMDbService.getMovieData returned null"));
-            return failed;
+            return failedFuture(new NullPointerException("OMDbService.getMovieData returned null"));
         }
 
         return omdbFuture.thenCompose(omdbResponse -> handleOmdbResponse(omdbResponse, title));
+    }
+
+    private boolean isBlank(String str) {
+        return str == null || str.trim().isEmpty();
+    }
+
+    private <T> CompletableFuture<T> failedFuture(Throwable ex) {
+        CompletableFuture<T> failed = new CompletableFuture<>();
+        failed.completeExceptionally(ex);
+        return failed;
     }
 
     // Extracted from addMovieToWatchlist for method size and clarity
@@ -319,16 +325,9 @@ public class MovieService {
      * @return PaginatedResponse containing movie data
      */
     public PaginatedResponse<MovieResponse> getMovies(int page, int size) {
-        // Validate and adjust pagination parameters
-        if (page < 0) page = 0;
-        if (size < 1 || size > 100) size = 10;
-
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = createPageable(page, size);
         Page<Movie> moviePage = movieRepository.findAll(pageable);
-
-        List<MovieResponse> movieResponses = moviePage.getContent().stream()
-                .map(MovieResponse::new)
-                .toList();
+        List<MovieResponse> movieResponses = mapToMovieResponses(moviePage.getContent());
 
         return new PaginatedResponse<>(
                 movieResponses,
@@ -337,6 +336,16 @@ public class MovieService {
                 moviePage.getTotalElements(),
                 moviePage.getTotalPages()
         );
+    }
+
+    private Pageable createPageable(int page, int size) {
+        int safePage = Math.max(page, 0);
+        int safeSize = (size < 1 || size > 100) ? 10 : size;
+        return PageRequest.of(safePage, safeSize);
+    }
+
+    private List<MovieResponse> mapToMovieResponses(List<Movie> movies) {
+        return movies.stream().map(MovieResponse::new).toList();
     }
 
     /**
