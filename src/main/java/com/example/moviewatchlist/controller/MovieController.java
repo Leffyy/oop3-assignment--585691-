@@ -39,14 +39,18 @@ public class MovieController {
         movieService.searchMovies(query)
             .thenAccept(result -> output.setResult(ResponseEntity.ok(result)))
             .exceptionally(ex -> {
-                Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-                output.setErrorResult(ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .header("Content-Type", "application/json")
-                    .body(Map.of("error", cause.getMessage())));
+                output.setErrorResult(buildInternalServerErrorResponse(ex));
                 return null;
             });
         return output;
+    }
+
+    private ResponseEntity<?> buildInternalServerErrorResponse(Throwable ex) {
+        Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .header("Content-Type", "application/json")
+                .body(Map.of("error", cause.getMessage()));
     }
 
     /**
@@ -60,23 +64,28 @@ public class MovieController {
         DeferredResult<ResponseEntity<?>> output = new DeferredResult<>();
         String title = request.get("title");
         if (title == null || title.trim().isEmpty()) {
-            output.setResult(ResponseEntity
-                .badRequest()
-                .header("Content-Type", "application/json")
-                .body(Map.of("error", "Movie title is required")));
+            output.setResult(buildBadRequestResponse("Movie title is required"));
             return output;
         }
         movieService.addMovieByTitle(title)
             .thenAccept(movie -> output.setResult(ResponseEntity.status(HttpStatus.CREATED).body(new MovieResponse(movie))))
             .exceptionally(ex -> {
-                Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-                output.setResult(ResponseEntity
-                    .badRequest()
-                    .header("Content-Type", "application/json")
-                    .body(Map.of("error", cause.getMessage())));
+                output.setResult(buildBadRequestResponse(ex));
                 return null;
             });
         return output;
+    }
+
+    private ResponseEntity<?> buildBadRequestResponse(String message) {
+        return ResponseEntity
+                .badRequest()
+                .header("Content-Type", "application/json")
+                .body(Map.of("error", message));
+    }
+
+    private ResponseEntity<?> buildBadRequestResponse(Throwable ex) {
+        Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+        return buildBadRequestResponse(cause.getMessage());
     }
 
     /**

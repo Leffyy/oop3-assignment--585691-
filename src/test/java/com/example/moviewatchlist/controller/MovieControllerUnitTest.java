@@ -451,6 +451,68 @@ class MovieControllerUnitTest {
         }
     }
 
+    @Test
+    void searchMovies_setsOkResult_onSuccess() {
+        MovieService mockService = mock(MovieService.class);
+        MovieController controller = new MovieController(mockService);
+        List<Map<String, Object>> resultList = List.of(Map.of("title", "result"));
+        when(mockService.searchMovies("foo")).thenReturn(CompletableFuture.completedFuture(resultList));
+        DeferredResult<ResponseEntity<?>> result = controller.searchMovies("foo");
+        ResponseEntity<?> response = getResult(result);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(resultList, response.getBody());
+    }
+
+    @SuppressWarnings("null")
+    @Test
+    void searchMovies_setsErrorResult_onExceptionWithCause() {
+        MovieService mockService = mock(MovieService.class);
+        MovieController controller = new MovieController(mockService);
+        Throwable cause = new IllegalArgumentException("cause");
+        CompletableFuture<List<Map<String, Object>>> failed = new CompletableFuture<>();
+        failed.completeExceptionally(new RuntimeException("fail", cause));
+        when(mockService.searchMovies("foo")).thenReturn(failed);
+        DeferredResult<ResponseEntity<?>> result = controller.searchMovies("foo");
+        ResponseEntity<?> response = getResult(result);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertTrue(response.getBody().toString().contains("fail"));
+    }
+
+    @SuppressWarnings("null")
+    @Test
+    void searchMovies_setsErrorResult_onExceptionWithoutCause() {
+        MovieService mockService = mock(MovieService.class);
+        MovieController controller = new MovieController(mockService);
+        CompletableFuture<List<Map<String, Object>>> failed = new CompletableFuture<>();
+        failed.completeExceptionally(new RuntimeException("fail")); // no cause
+        when(mockService.searchMovies("foo")).thenReturn(failed);
+        DeferredResult<ResponseEntity<?>> result = controller.searchMovies("foo");
+        ResponseEntity<?> response = getResult(result);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().toString().contains("fail"));
+    }
+
+    @SuppressWarnings("null")
+    @Test
+    void deleteMovie_returnsOk_whenDeleted() {
+        MovieService mockService = mock(MovieService.class);
+        when(mockService.deleteMovie(1L)).thenReturn(true);
+        MovieController controller = new MovieController(mockService);
+        ResponseEntity<?> response = controller.deleteMovie(1L);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody().toString().contains("Movie deleted successfully"));
+    }
+
+    @Test
+    void deleteMovie_returnsNotFound_whenNotDeleted() {
+        MovieService mockService = mock(MovieService.class);
+        when(mockService.deleteMovie(1L)).thenReturn(false);
+        MovieController controller = new MovieController(mockService);
+        ResponseEntity<?> response = controller.deleteMovie(1L);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
     // Utility method to wait for DeferredResult (with timeout)
     private ResponseEntity<?> getResult(DeferredResult<ResponseEntity<?>> result) {
         for (int i = 0; i < 100; i++) {
@@ -526,21 +588,85 @@ class MovieControllerUnitTest {
 
     @SuppressWarnings("null")
     @Test
-    void deleteMovie_returnsOk_whenDeleted() {
+    void addMovie_setsErrorResult_onExceptionWithCause() {
         MovieService mockService = mock(MovieService.class);
-        when(mockService.deleteMovie(1L)).thenReturn(true);
         MovieController controller = new MovieController(mockService);
-        ResponseEntity<?> response = controller.deleteMovie(1L);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue(response.getBody().toString().contains("Movie deleted successfully"));
+        Throwable cause = new IllegalArgumentException("cause");
+        CompletableFuture<Movie> failed = new CompletableFuture<>();
+        failed.completeExceptionally(new RuntimeException("fail", cause));
+        when(mockService.addMovieByTitle("Inception")).thenReturn(failed);
+
+        Map<String, String> request = new HashMap<>();
+        request.put("title", "Inception");
+        DeferredResult<ResponseEntity<?>> result = controller.addMovie(request);
+        ResponseEntity<?> response = getResult(result);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertTrue(response.getBody().toString().contains("fail"));
     }
 
+    @SuppressWarnings("null")
     @Test
-    void deleteMovie_returnsNotFound_whenNotDeleted() {
+    void addMovie_setsErrorResult_onExceptionWithoutCause() {
         MovieService mockService = mock(MovieService.class);
-        when(mockService.deleteMovie(1L)).thenReturn(false);
         MovieController controller = new MovieController(mockService);
-        ResponseEntity<?> response = controller.deleteMovie(1L);
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        CompletableFuture<Movie> failed = new CompletableFuture<>();
+        failed.completeExceptionally(new RuntimeException("fail")); // no cause
+        when(mockService.addMovieByTitle("Inception")).thenReturn(failed);
+
+        Map<String, String> request = new HashMap<>();
+        request.put("title", "Inception");
+        DeferredResult<ResponseEntity<?>> result = controller.addMovie(request);
+        ResponseEntity<?> response = getResult(result);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().toString().contains("fail"));
+    }
+
+    @SuppressWarnings("null")
+    @Test
+    void buildInternalServerErrorResponse_withAndWithoutCause() throws Exception {
+        MovieController controller = new MovieController(null);
+
+        // With cause
+        Throwable cause = new IllegalArgumentException("cause");
+        Throwable exWithCause = new RuntimeException("fail", cause);
+        ResponseEntity<?> responseWithCause = invokeBuildInternalServerErrorResponse(controller, exWithCause);
+        assertTrue(responseWithCause.getBody().toString().contains("cause"));
+
+        // Without cause
+        Throwable exWithoutCause = new RuntimeException("fail");
+        ResponseEntity<?> responseWithoutCause = invokeBuildInternalServerErrorResponse(controller, exWithoutCause);
+        assertTrue(responseWithoutCause.getBody().toString().contains("fail"));
+    }
+
+    private ResponseEntity<?> invokeBuildInternalServerErrorResponse(MovieController controller, Throwable ex) throws Exception {
+        var m = MovieController.class.getDeclaredMethod("buildInternalServerErrorResponse", Throwable.class);
+        m.setAccessible(true);
+        return (ResponseEntity<?>) m.invoke(controller, ex);
+    }
+
+    @SuppressWarnings("null")
+    @Test
+    void buildBadRequestResponse_withAndWithoutCause() throws Exception {
+        MovieController controller = new MovieController(null);
+
+        // With cause
+        Throwable cause = new IllegalArgumentException("cause");
+        Throwable exWithCause = new RuntimeException("fail", cause);
+        ResponseEntity<?> responseWithCause = invokeBuildBadRequestResponse(controller, exWithCause);
+        assertTrue(responseWithCause.getBody().toString().contains("cause"));
+
+        // Without cause
+        Throwable exWithoutCause = new RuntimeException("fail");
+        ResponseEntity<?> responseWithoutCause = invokeBuildBadRequestResponse(controller, exWithoutCause);
+        assertTrue(responseWithoutCause.getBody().toString().contains("fail"));
+    }
+
+    private ResponseEntity<?> invokeBuildBadRequestResponse(MovieController controller, Throwable ex) throws Exception {
+        var m = MovieController.class.getDeclaredMethod("buildBadRequestResponse", Throwable.class);
+        m.setAccessible(true);
+        return (ResponseEntity<?>) m.invoke(controller, ex);
     }
 }
