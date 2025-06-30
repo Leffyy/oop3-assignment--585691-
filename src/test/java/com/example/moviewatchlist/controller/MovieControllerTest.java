@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.ArrayList;
+import java.util.Optional;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -145,5 +146,55 @@ public class MovieControllerTest {
         mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Movie already exists")));
+    }
+
+    /**
+     * Tests searching for movies handles exceptions and returns an Internal Server Error status.
+     */
+    @Test
+    void searchMovies_handlesException() throws Exception {
+        when(movieService.searchMovies(anyString()))
+            .thenReturn(CompletableFuture.failedFuture(new RuntimeException("fail")));
+
+        // Step 1: Perform the request and check async started
+        var mvcResult = mockMvc.perform(get("/api/movies/search").param("query", "bad"))
+            .andExpect(request().asyncStarted())
+            .andReturn();
+
+        // Step 2: Dispatch the async result and check the response
+        mockMvc.perform(asyncDispatch(mvcResult))
+            .andExpect(status().isInternalServerError())
+            .andExpect(jsonPath("$.error").value("fail"));
+    }
+
+    /**
+     * Tests retrieving a movie by ID returns the correct movie details.
+     */
+    @Test
+    void getMovie_returnsMovie_whenFound() throws Exception {
+        Movie mockMovie = Movie.builder()
+            .id(1L)
+            .title("Inception")
+            .releaseYear("2010")
+            .director("Christopher Nolan")
+            .genre("Sci-Fi")
+            .build();
+        MovieResponse mockMovieResponse = new MovieResponse(mockMovie);
+        when(movieService.getMovieById(1L)).thenReturn(Optional.of(mockMovieResponse));
+
+        mockMvc.perform(get("/api/movies/1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(mockMovie.getId()));
+    }
+
+    /**
+     * Tests retrieving a movie by ID returns a Not Found status when the movie is missing.
+     */
+    @Test
+    void getMovie_returnsNotFound_whenMissing() throws Exception {
+        when(movieService.getMovieById(2L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/movies/2"))
+            .andExpect(status().isNotFound());
     }
 }

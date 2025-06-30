@@ -68,7 +68,7 @@ public class TMDbService {
                 .thenApply(response -> {
                     try {
                         return objectMapper.readValue(response.body(), TMDbImagesResponse.class);
-                    } catch (IOException e) {
+                    } catch (Exception e) { // <-- catch all exceptions
                         throw new RuntimeException("Failed to parse TMDb images response", e);
                     }
                 });
@@ -89,7 +89,7 @@ public class TMDbService {
                 .thenApply(response -> {
                     try {
                         return objectMapper.readValue(response.body(), TMDbSimilarResponse.class);
-                    } catch (IOException e) {
+                    } catch (Exception e) { // <-- catch all exceptions
                         throw new RuntimeException("Failed to parse TMDb similar movies response", e);
                     }
                 });

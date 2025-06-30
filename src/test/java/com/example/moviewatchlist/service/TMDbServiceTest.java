@@ -3,6 +3,7 @@ package com.example.moviewatchlist.service;
 import com.example.moviewatchlist.dto.TMDbSearchResponse;
 import com.example.moviewatchlist.dto.TMDbImagesResponse;
 import com.example.moviewatchlist.dto.TMDbSimilarResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -241,5 +242,59 @@ public class TMDbServiceTest {
         CompletableFuture<TMDbSearchResponse> future = tmdbService.searchMovie(movieTitle);
 
         assertThrows(RuntimeException.class, () -> future.join());
+    }
+
+    static class FailingObjectMapper extends ObjectMapper {
+        @Override
+        public <T> T readValue(String content, Class<T> valueType) {
+            throw new RuntimeException("Parse error");
+        }
+    }
+
+    @Test
+    void getMovieImages_throwsRuntimeExceptionOnParseError() throws Exception {
+        TMDbService service = new TMDbService();
+        ObjectMapper failingMapper = new FailingObjectMapper();
+        ReflectionTestUtils.setField(service, "objectMapper", failingMapper);
+
+        HttpClient mockClient = mock(HttpClient.class);
+        HttpResponse<String> mockResponse = mock(HttpResponse.class);
+        when(mockResponse.body()).thenReturn("{}");
+        when(mockClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+            .thenReturn(CompletableFuture.completedFuture(mockResponse));
+        ReflectionTestUtils.setField(service, "httpClient", mockClient);
+
+        CompletableFuture<TMDbImagesResponse> future = service.getMovieImages(123);
+        RuntimeException ex = assertThrows(RuntimeException.class, future::join);
+        Throwable real = ex.getCause();
+        assertEquals("Failed to parse TMDb images response", real.getMessage());
+        assertNotNull(real.getCause());
+        assertEquals("Parse error", real.getCause().getMessage());
+    }
+
+    @Test
+    void getSimilarMovies_throwsRuntimeExceptionOnParseError() throws Exception {
+        TMDbService service = new TMDbService();
+        ObjectMapper failingMapper = new ObjectMapper() {
+            @Override
+            public <T> T readValue(String content, Class<T> valueType) {
+                throw new RuntimeException("Parse error");
+            }
+        };
+        ReflectionTestUtils.setField(service, "objectMapper", failingMapper);
+
+        HttpClient mockClient = mock(HttpClient.class);
+        HttpResponse<String> mockResponse = mock(HttpResponse.class);
+        when(mockResponse.body()).thenReturn("{}");
+        when(mockClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+            .thenReturn(CompletableFuture.completedFuture(mockResponse));
+        ReflectionTestUtils.setField(service, "httpClient", mockClient);
+
+        CompletableFuture<TMDbSimilarResponse> future = service.getSimilarMovies(123);
+        RuntimeException ex = assertThrows(RuntimeException.class, future::join);
+        Throwable real = ex.getCause();
+        assertEquals("Failed to parse TMDb similar movies response", real.getMessage());
+        assertNotNull(real.getCause());
+        assertEquals("Parse error", real.getCause().getMessage());
     }
 }
