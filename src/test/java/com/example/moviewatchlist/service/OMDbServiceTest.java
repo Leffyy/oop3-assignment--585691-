@@ -12,6 +12,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -195,5 +196,21 @@ public class OMDbServiceTest {
         assertEquals("True", result.getResponse());
         assertNull(result.getTitle());
         assertNull(result.getYear());
+    }
+
+    @Test
+    void getMovieData_throwsExceptionIfTitleIsNull() {
+        CompletableFuture<OMDbResponse> future = omdbService.getMovieData(null);
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertTrue(ex.getCause() instanceof IllegalArgumentException);
+        assertEquals("Title cannot be null or blank", ex.getCause().getMessage());
+    }
+
+    @Test
+    void getMovieData_throwsExceptionIfTitleIsBlank() {
+        CompletableFuture<OMDbResponse> future = omdbService.getMovieData("   ");
+        CompletionException ex = assertThrows(CompletionException.class, future::join);
+        assertTrue(ex.getCause() instanceof IllegalArgumentException);
+        assertEquals("Title cannot be null or blank", ex.getCause().getMessage());
     }
 }

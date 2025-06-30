@@ -311,7 +311,6 @@ public class MovieServiceTest {
     @Test
     void searchMovies_returnsEmptyListForNullOrShortQuery() {
         MovieService service = new MovieService();
-        // You may need to inject mocks for tmdbService if used elsewhere
 
         CompletableFuture<List<Map<String, Object>>> result1 = service.searchMovies(null);
         CompletableFuture<List<Map<String, Object>>> result2 = service.searchMovies(" ");
