@@ -5,13 +5,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -21,6 +25,7 @@ import java.util.concurrent.CompletableFuture;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mockStatic;
 
 /**
  * Unit tests for ImageDownloadService using JUnit and Mockito.
@@ -200,6 +205,107 @@ class ImageDownloadServiceTest {
         assertThrows(RuntimeException.class, () -> {
             imageDownloadService.downloadImages(imagePaths, movieTitle).join();
         });
+    }
+
+    /**
+     * Tests creation of images directory if it doesn't exist.
+     */
+    @Test
+    void ensureImagesDirectoryExists_createsDirectory() throws Exception {
+        ImageDownloadService service = new ImageDownloadService();
+        ReflectionTestUtils.setField(service, "imagesPath", "test-images");
+
+        Path dir = Path.of("test-images");
+
+        try (MockedStatic<Files> filesMock = mockStatic(Files.class)) {
+            filesMock.when(() -> Files.exists(dir)).thenReturn(false);
+            filesMock.when(() -> Files.createDirectories(dir)).thenReturn(dir);
+
+            // Call private method via reflection or public method that triggers it
+            Method m = ImageDownloadService.class.getDeclaredMethod("ensureImagesDirectoryExists");
+            m.setAccessible(true);
+            m.invoke(service);
+
+            filesMock.verify(() -> Files.createDirectories(dir));
+        }
+    }
+
+    /**
+     * Tests that an exception is thrown if directory creation fails.
+     */
+    @Test
+    void ensureImagesDirectoryExists_throwsRuntimeExceptionOnIOException() throws Exception {
+        ImageDownloadService service = new ImageDownloadService();
+        ReflectionTestUtils.setField(service, "imagesPath", "test-images");
+
+        Path dir = Path.of("test-images");
+
+        try (MockedStatic<Files> filesMock = mockStatic(Files.class)) {
+            filesMock.when(() -> Files.exists(dir)).thenReturn(false);
+            filesMock.when(() -> Files.createDirectories(dir)).thenThrow(new IOException("fail"));
+
+            Method m = ImageDownloadService.class.getDeclaredMethod("ensureImagesDirectoryExists");
+            m.setAccessible(true);
+
+            InvocationTargetException ex = assertThrows(InvocationTargetException.class, () -> m.invoke(service));
+            Throwable real = ex.getCause();
+            assertTrue(real instanceof RuntimeException);
+            assertTrue(real.getCause() instanceof IOException);
+            assertEquals("Failed to create images directory", real.getMessage());
+        }
+    }
+
+    /**
+     * Tests that downloadImage returns null when an IOException occurs.
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    void downloadImage_returnsNullOnIOException() throws Exception {
+        ImageDownloadService service = new ImageDownloadService();
+        ReflectionTestUtils.setField(service, "imagesPath", "test-images");
+
+        String imageUrl = "https://image.tmdb.org/t/p/w780/test.jpg";
+        String localPath = "test-images/test.jpg";
+
+        // Mock HttpClient and response
+        HttpClient mockClient = mock(HttpClient.class);
+        HttpResponse<byte[]> mockResponse = mock(HttpResponse.class);
+        when(mockResponse.statusCode()).thenReturn(200);
+        when(mockResponse.body()).thenReturn(new byte[]{1, 2, 3});
+        when(mockClient.sendAsync(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+            .thenReturn(CompletableFuture.completedFuture(mockResponse));
+        ReflectionTestUtils.setField(service, "httpClient", mockClient);
+
+        // Mock Files.write to throw IOException
+        try (MockedStatic<Files> filesMock = mockStatic(Files.class)) {
+            filesMock.when(() -> Files.write(any(Path.class), any(byte[].class)))
+                .thenThrow(new IOException("disk full"));
+
+            Method m = ImageDownloadService.class.getDeclaredMethod("downloadImage", String.class, String.class);
+            m.setAccessible(true);
+            CompletableFuture<String> future = (CompletableFuture<String>) m.invoke(service, imageUrl, localPath);
+            String result = future.join();
+            assertNull(result);
+        }
+    }
+
+    /**
+     * Tests getting file extension from image path.
+     */
+    @Test
+    void getFileExtension_returnsExtensionOrDefault() throws Exception {
+        ImageDownloadService service = new ImageDownloadService();
+
+        Method m = ImageDownloadService.class.getDeclaredMethod("getFileExtension", String.class);
+        m.setAccessible(true);
+
+        // Case 1: imagePath has extension
+        String ext1 = (String) m.invoke(service, "poster.png");
+        assertEquals(".png", ext1);
+
+        // Case 2: imagePath has no extension
+        String ext2 = (String) m.invoke(service, "poster");
+        assertEquals(".jpg", ext2);
     }
 
     // Helper method for type-safe BodyHandler
