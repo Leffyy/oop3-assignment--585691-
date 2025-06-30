@@ -11,7 +11,6 @@ import org.springframework.web.context.request.async.DeferredResult;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * REST controller for movie-related endpoints.
@@ -35,11 +34,19 @@ public class MovieController {
      * @return List of movie search results
      */
     @GetMapping("/search")
-    public CompletableFuture<ResponseEntity<?>> searchMovies(@RequestParam String query) {
-        return movieService.searchMovies(query)
-                .<ResponseEntity<?>>thenApply(ResponseEntity::ok)
-                .exceptionally(ex -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(Map.of("error", ex.getMessage())));
+    public DeferredResult<ResponseEntity<?>> searchMovies(@RequestParam String query) {
+        DeferredResult<ResponseEntity<?>> output = new DeferredResult<>();
+        movieService.searchMovies(query)
+            .thenAccept(result -> output.setResult(ResponseEntity.ok(result)))
+            .exceptionally(ex -> {
+                Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                output.setErrorResult(ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .header("Content-Type", "application/json")
+                    .body(Map.of("error", cause.getMessage())));
+                return null;
+            });
+        return output;
     }
 
     /**
@@ -111,16 +118,53 @@ public class MovieController {
     @PatchMapping("/{id}/watched")
     public ResponseEntity<?> updateWatchedStatus(
             @PathVariable Long id,
-            @RequestBody Map<String, Boolean> request) {
+            @RequestBody Map<String, Object> request) {
+        Boolean watched = extractWatched(request.get("watched"));
+        return watchedUpdateResponse(id, watched);
+    }
 
-        Boolean watched = request.get("watched");
+    private ResponseEntity<?> watchedUpdateResponse(Long id, Boolean watched) {
+        if (watched == null) {
+            return watchedBadRequest();
+        }
+        return handleWatchedUpdate(id, watched);
+    }
+
+    private ResponseEntity<?> watchedBadRequest() {
+        return ResponseEntity.badRequest()
+                .body(Map.of("error", "Watched status is required and must be true or false"));
+    }
+
+    private ResponseEntity<?> handleWatchedUpdate(Long id, Boolean watched) {
         try {
             Optional<Movie> updatedMovie = movieService.updateWatchedStatus(id, watched);
-            return updatedMovie.map(movie -> ResponseEntity.ok(new MovieResponse(movie)))
-                    .orElse(ResponseEntity.notFound().build());
+            return watchedUpdateResult(updatedMovie);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return watchedUpdateError(e);
         }
+    }
+
+    private ResponseEntity<?> watchedUpdateResult(Optional<Movie> updatedMovie) {
+        return updatedMovie
+                .map(movie -> ResponseEntity.ok(new MovieResponse(movie)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    private ResponseEntity<?> watchedUpdateError(IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+    }
+
+    private Boolean extractWatched(Object watchedObj) {
+        if (watchedObj instanceof Boolean) {
+            return (Boolean) watchedObj;
+        }
+        if (watchedObj instanceof String) {
+            String str = ((String) watchedObj).trim().toLowerCase();
+            if ("true".equals(str) || "false".equals(str)) {
+                return Boolean.parseBoolean(str);
+            }
+        }
+        return null;
     }
 
     /**
@@ -133,16 +177,49 @@ public class MovieController {
     @PatchMapping("/{id}/rating")
     public ResponseEntity<?> updateRating(
             @PathVariable Long id,
-            @RequestBody Map<String, Integer> request) {
+            @RequestBody Map<String, Object> request) {
+        Integer rating = extractRating(request.get("rating"));
+        return ratingUpdateResponse(id, rating);
+    }
 
-        Integer rating = request.get("rating");
+    private ResponseEntity<?> ratingUpdateResponse(Long id, Integer rating) {
+        if (rating == null) {
+            return ratingBadRequest();
+        }
+        return handleRatingUpdate(id, rating);
+    }
+
+    private ResponseEntity<?> ratingBadRequest() {
+        return ResponseEntity.badRequest()
+                .body(Map.of("error", "Rating is required and must be an integer"));
+    }
+
+    private ResponseEntity<?> handleRatingUpdate(Long id, Integer rating) {
         try {
             Optional<Movie> updatedMovie = movieService.updateRating(id, rating);
-            return updatedMovie.map(movie -> ResponseEntity.ok(new MovieResponse(movie)))
-                    .orElse(ResponseEntity.notFound().build());
+            return ratingUpdateResult(updatedMovie);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    private ResponseEntity<?> ratingUpdateResult(Optional<Movie> updatedMovie) {
+        return updatedMovie
+                .map(movie -> ResponseEntity.ok(new MovieResponse(movie)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    private Integer extractRating(Object ratingObj) {
+        if (ratingObj instanceof Integer) {
+            return (Integer) ratingObj;
+        } else if (ratingObj instanceof Double) {
+            return ((Double) ratingObj).intValue();
+        } else if (ratingObj instanceof String) {
+            try {
+                return Integer.parseInt((String) ratingObj);
+            } catch (NumberFormatException ignored) {}
+        }
+        return null;
     }
 
     /**
