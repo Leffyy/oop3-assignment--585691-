@@ -40,7 +40,7 @@ public class MovieControllerTest {
     @MockitoBean
     private MovieService movieService;
 
-    /** Helps convert objects to JSON and back. */
+    /** converts objects to JSON and back. */
     @Autowired
     private ObjectMapper objectMapper;
 
