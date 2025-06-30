@@ -8,12 +8,12 @@ It integrates with OMDb and TMDb APIs to provide rich movie data, images, and si
 ## Features
 
 - **Add movies:** Search and add movies to your watchlist using movie titles.
-- **Rich movie data:** Combines data from OMDb (basic info) and TMDb (images, similar movies).
+- **Movie data:** Combines data from OMDb (basic info) and TMDb (images, similar movies).
 - **Image downloads:** Automatically downloads and saves movie posters/backdrops.
 - **Watchlist management:** Mark movies as watched, rate them, and delete them.
-- **Pagination:** Efficiently browse large collections of movies.
+- **Pagination:**  Browse large collections of movies.
 - **RESTful API:** Clean REST endpoints for all operations.
-- **Async processing:** Fast, non-blocking operations for external API calls and image downloads.
+- **Async processing:** Operations for external API calls and image downloads.
 
 ---
 
