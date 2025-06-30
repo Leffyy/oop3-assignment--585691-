@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/Leffyy/oop3-assignment--585691-/branch/main/graph/badge.svg?token=2FJYZO688V)](https://codecov.io/gh/Leffyy/oop3-assignment--585691-)
+
 # Movie Watchlist Backend Application
 
 This Spring Boot application allows users to build and manage a movie watchlist.  
