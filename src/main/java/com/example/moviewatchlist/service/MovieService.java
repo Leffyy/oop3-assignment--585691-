@@ -269,7 +269,7 @@ public class MovieService {
      * @param imagesResponse TMDb images response
      * @return List of image paths (2 posters + 1 backdrop)
      */
-    private List<String> extractImagePaths(TMDbImagesResponse imagesResponse) {
+    List<String> extractImagePaths(TMDbImagesResponse imagesResponse) {
         List<String> imagePaths = new ArrayList<>();
         addPosterPaths(imagesResponse, imagePaths);
         addBackdropPaths(imagesResponse, imagePaths);
@@ -369,18 +369,18 @@ public class MovieService {
      * @return Optional containing the updated movie, or empty if not found
      * @throws IllegalArgumentException if rating is not between 1 and 5
      */
-    public Optional<Movie> updateRating(Long movieId, Integer rating) {
-        if (rating != null && (rating < 1 || rating > 5)) {
+    public Optional<Movie> updateRating(Long id, Integer rating) {
+        if (rating == null) {
+            throw new IllegalArgumentException("Rating is required");
+        }
+        if (rating < 1 || rating > 5) {
             throw new IllegalArgumentException("Rating must be between 1 and 5");
         }
-
-        Optional<Movie> movieOpt = movieRepository.findById(movieId);
-        if (movieOpt.isPresent()) {
-            Movie movie = movieOpt.get();
-            movie.setRating(rating);
-            return Optional.of(movieRepository.save(movie));
-        }
-        return Optional.empty();
+        return movieRepository.findById(id)
+                .map(movie -> {
+                    movie.setRating(rating);
+                    return movieRepository.save(movie);
+                });
     }
 
     /**
